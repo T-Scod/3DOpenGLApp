@@ -30,14 +30,22 @@ void Camera::LookAt(const glm::vec3 & from, const glm::vec3 & to, const glm::vec
 	m_view = glm::lookAt(from, to, up);
 	m_model = glm::inverse(m_view);
 }
+void Camera::Rotate(const float angle, const glm::vec3 & axis)
+{
+	m_model = glm::rotate(m_model, angle, axis);
+	m_view = glm::inverse(m_model);
+}
 void Camera::SetView(const glm::mat4 & view)
 {
 	m_view = view;
 }
 
-void Camera::SetPosition(const glm::vec3 & position)
+void Camera::Translate(const glm::vec3 & position)
 {
-	m_model = glm::translate(glm::mat4(1.0f), position);
+	m_model[3][0] += position.x;
+	m_model[3][1] += position.y;
+	m_model[3][2] += position.z;
+	m_view = glm::inverse(m_model);
 }
 void Camera::SetModel(const glm::mat4 & model)
 {

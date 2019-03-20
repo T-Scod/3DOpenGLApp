@@ -19,7 +19,6 @@ bool App3D::startup()
 {
 	m_camera = new Camera();
 	m_camera->LookAt(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	//m_camera->SetView(glm::inverse(m_camera->GetModel()));
 	m_camera->Perspective(glm::pi<float>() * 0.25f, 1280.0f / 720.0f, 0.1f, 100.0f);
 
 	return true;
@@ -37,54 +36,75 @@ void App3D::update(float deltaTime)
 		m_gameOver = true;
 	}
 
-	glm::vec3 position = { m_camera->GetModel()[3][0], m_camera->GetModel()[3][1], m_camera->GetModel()[3][2] };
-	static float horizontalAngle = glm::pi<float>() * 0.25f;
-	static float verticalAngle = 0.0f;
-	static float initialFoV = 45.0f;
+	glm::vec3 position(0.0f);
+	glm::vec3 forward = { -m_camera->GetView()[0][2], -m_camera->GetView()[1][2], -m_camera->GetView()[2][2] };
+	glm::vec3 up = { m_camera->GetView()[0][1], m_camera->GetView()[1][1], m_camera->GetView()[2][1] };
+	glm::vec3 right = { m_camera->GetView()[0][0], m_camera->GetView()[1][0], m_camera->GetView()[2][0] };
 	float speed = 3.0f;
-	float mouseSpeed = 0.005f;
+	if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		position += forward * speed * deltaTime;
+	}
+	if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		position -= forward * speed * deltaTime;
+	}
+	if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		position += right * speed * deltaTime;
+	}
+	if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		position -= right * speed * deltaTime;
+	}
+	if (glfwGetKey(m_window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		position += up * speed * deltaTime;
+	}
+	if (glfwGetKey(m_window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		position -= up * speed * deltaTime;
+	}
+
+	m_camera->Translate(position);
+
+	float mouseSpeed = 0.01f;
 	double xPos, yPos;
 	glfwGetCursorPos(m_window, &xPos, &yPos);
 	int width, height;
 	glfwGetWindowSize(m_window, &width, &height);
 	glfwSetCursorPos(m_window, (double)width / 2.0, (double)height / 2.0);
-	horizontalAngle += mouseSpeed * (float(width) / 2.0f - (float)xPos) * deltaTime;
-	verticalAngle += mouseSpeed * (float(height) / 2.0f - (float)yPos) * deltaTime;
-	float foo = cosf(verticalAngle);
-	glm::vec3 direction(cosf(verticalAngle) * sinf(horizontalAngle),
-						sinf(verticalAngle),
-						cosf(verticalAngle) * cosf(horizontalAngle));
-	glm::vec3 right(sinf(horizontalAngle - glm::pi<float>() / 2.0f),
-					0.0f,
-					cosf(horizontalAngle - glm::pi<float>() / 2.0f));
-	glm::vec3 up = glm::cross(right, direction);
+	glm::vec2 mouseDir = { ((double)width / 2.0) - xPos, ((double)height / 2.0) - yPos};
 
-	if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
-	{
-		position += direction * speed * deltaTime;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	{
-		position -= direction * speed * deltaTime;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-	{
-		position += direction * speed * deltaTime;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
-	{
-		position -= direction * speed * deltaTime;
-	}
+	m_camera->Rotate(mouseDir.x * mouseSpeed * deltaTime, m_camera->GetView() * glm::vec4({ 0.0f, 1.0f, 0.0f, 0.0f }));
+	m_camera->Rotate(mouseDir.y * mouseSpeed * deltaTime, { 1.0f, 0.0f, 0.0f });
+
+	static float initialFoV = 45.0f;
 	glfwSetScrollCallback(m_window, ScrollCallback);
 	float FoV = initialFoV - 5.0f * m_scroll;
-	//initialFoV = FoV;
 
 	m_camera->Perspective(glm::radians(FoV), (float)width / (float)height, 0.1f, 100.0f);
-	m_camera->LookAt(position, position + direction, up);
-	//m_camera->SetView(m_camera->GetModel());
 }
 void App3D::draw()
 {
+	aie::Gizmos::addTransform(glm::mat4(1.0f));
+
+	glm::vec4 white(1.0f);
+	glm::vec4 black(0.0f, 0.0f, 0.0f, 1.0f);
+
+	for (int i = 0; i < 21; i++)
+	{
+		aie::Gizmos::addLine(glm::vec3(-10.0f + i, 0.0f, 10.0f),
+			glm::vec3(-10.0f + i, 0.0f, -10.0f),
+			(i == 10) ? white : black);
+
+		aie::Gizmos::addLine(glm::vec3(10.0f, 0.0f, -10.0f + i),
+			glm::vec3(-10.0f, 0.0f, -10.0f + i),
+			(i == 10) ? white : black);
+	}
+
+	//aie::Gizmos::draw(projection * view);
+	aie::Gizmos::draw(m_camera->GetProjectionView());
 }
 
 void App3D::RunApp()
@@ -131,10 +151,10 @@ void App3D::RunApp()
 
 	aie::Gizmos::create(256, 256, 32768, 32768);
 
-	glm::mat4 view = glm::lookAt(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 projection = glm::perspective(glm::pi<float>() * 0.25f, 16.0f / 9.0f, 0.1f, 100.0f);
-	glm::mat4 pvm = m_camera->GetPVM();
-	pvm = projection * view * m_camera->GetModel();
+	//glm::mat4 view = glm::lookAt(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	//glm::mat4 projection = glm::perspective(glm::pi<float>() * 0.25f, 16.0f / 9.0f, 0.1f, 100.0f);
+	//glm::mat4 pvm = m_camera->GetProjectionView();
+	//pvm = projection * view * m_camera->GetModel();
 
 	// variables for timing
 	double prevTime = glfwGetTime();
@@ -151,25 +171,6 @@ void App3D::RunApp()
 
 		// clears all previously drawn gizmos
 		aie::Gizmos::clear();
-
-		aie::Gizmos::addTransform(glm::mat4(1.0f));
-
-		glm::vec4 white(1.0f);
-		glm::vec4 black(0.0f, 0.0f, 0.0f, 1.0f);
-
-		for (int i = 0; i < 21; i++)
-		{
-			aie::Gizmos::addLine(glm::vec3(-10.0f + i, 0.0f, 10.0f),
-				glm::vec3(-10.0f + i, 0.0f, -10.0f),
-				(i == 10) ? white : black);
-
-			aie::Gizmos::addLine(glm::vec3(10.0f, 0.0f, -10.0f + i),
-				glm::vec3(-10.0f, 0.0f, -10.0f + i),
-				(i == 10) ? white : black);
-		}
-
-		//aie::Gizmos::draw(projection * view);
-		aie::Gizmos::draw(m_camera->GetPVM());
 
 		// update delta time
 		currTime = glfwGetTime();
