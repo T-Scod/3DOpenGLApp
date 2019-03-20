@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnimationApp.cpp" />
     <ClCompile Include="App3D.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
@@ -29,6 +30,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimationApp.h" />
     <ClInclude Include="App3D.h" />
     <ClInclude Include="Camera.h" />
   </ItemGroup>

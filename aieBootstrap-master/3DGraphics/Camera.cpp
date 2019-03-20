@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+float m_scroll = 0.0f;
+
 Camera::Camera()
 {
 	m_model = glm::mat4(1.0f);
@@ -50,4 +52,14 @@ void Camera::Translate(const glm::vec3 & position)
 void Camera::SetModel(const glm::mat4 & model)
 {
 	m_model = model;
+}
+
+void Camera::ScrollCallback(GLFWwindow * window, double x, double y)
+{
+	m_scroll += (float)y;
+}
+
+float Camera::GetScroll() const
+{
+	return m_scroll;
 }

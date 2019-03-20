@@ -6,7 +6,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-class App3D : public aie::Application
+class AnimationApp : public aie::Application
 {
 public:
 	struct KeyFrame
@@ -16,8 +16,8 @@ public:
 	};
 
 public:
-	App3D();
-	~App3D();
+	AnimationApp();
+	~AnimationApp();
 
 	virtual bool startup();
 	virtual void shutdown();
@@ -28,4 +28,15 @@ public:
 
 protected:
 	Camera* m_camera;
+
+	glm::vec3 m_positions[2];
+	glm::quat m_rotations[2];
+
+	KeyFrame m_hipFrames[2];
+	KeyFrame m_kneeFrames[2];
+	KeyFrame m_ankleFrames[2];
+
+	glm::mat4 m_hipBone;
+	glm::mat4 m_kneeBone;
+	glm::mat4 m_ankleBone;
 };

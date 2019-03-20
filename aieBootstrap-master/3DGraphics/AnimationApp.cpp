@@ -1,32 +1,50 @@
-#include "App3D.h"
+#include "AnimationApp.h"
 #include <gl_core_4_4.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <Gizmos.h>
 #include <glm/gtx/transform.hpp>
 
-App3D::App3D()
+AnimationApp::AnimationApp()
 {
 }
-App3D::~App3D()
+AnimationApp::~AnimationApp()
 {
 }
 
-bool App3D::startup()
+bool AnimationApp::startup()
 {
 	m_camera = new Camera();
 	m_camera->LookAt(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	m_camera->Perspective(glm::pi<float>() * 0.25f, 1280.0f / 720.0f, 0.1f, 100.0f);
 
+	m_positions[0] = glm::vec3(10.0f, 5.0f, 10.0f);
+	m_positions[1] = glm::vec3(-10.0f, 0.0f, -10.0f);
+	m_rotations[0] = glm::quat(glm::vec3(0.0f, -1.0f, 0.0f));
+	m_rotations[1] = glm::quat(glm::vec3(0.0f, 1.0f, 0.0f));
+
+	m_hipFrames[0].position = glm::vec3(0.0f, 5.0f, 0.0f);
+	m_hipFrames[0].rotation = glm::quat(glm::vec3(1.0f, 0.0f, 0.0f));
+	m_hipFrames[1].position = glm::vec3(0.0f, 5.0f, 0.0f);
+	m_hipFrames[1].rotation = glm::quat(glm::vec3(-1.0f, 0.0f, 0.0f));
+	m_kneeFrames[0].position = glm::vec3(0.0f, -2.5f, 0.0f);
+	m_kneeFrames[0].rotation = glm::quat(glm::vec3(1.0f, 0.0f, 0.0f));
+	m_kneeFrames[1].position = glm::vec3(0.0f, -2.5f, 0.0f);
+	m_kneeFrames[1].rotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
+	m_ankleFrames[0].position = glm::vec3(0.0f, -2.5f, 0.0f);
+	m_ankleFrames[0].rotation = glm::quat(glm::vec3(-1.0f, 0.0f, 0.0f));
+	m_ankleFrames[1].position = glm::vec3(0.0f, -2.5f, 0.0f);
+	m_ankleFrames[1].rotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
+
 	return true;
 }
-void App3D::shutdown()
+void AnimationApp::shutdown()
 {
 	delete m_camera;
 	m_camera = nullptr;
 }
 
-void App3D::update(float deltaTime)
+void AnimationApp::update(float deltaTime)
 {
 	if (glfwWindowShouldClose(m_window) == true || glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -71,7 +89,7 @@ void App3D::update(float deltaTime)
 	int width, height;
 	glfwGetWindowSize(m_window, &width, &height);
 	glfwSetCursorPos(m_window, (double)width / 2.0, (double)height / 2.0);
-	glm::vec2 mouseDir = { ((double)width / 2.0) - xPos, ((double)height / 2.0) - yPos};
+	glm::vec2 mouseDir = { ((double)width / 2.0) - xPos, ((double)height / 2.0) - yPos };
 
 	m_camera->Rotate(mouseDir.x * mouseSpeed * deltaTime, m_camera->GetView() * glm::vec4({ 0.0f, 1.0f, 0.0f, 0.0f }));
 	m_camera->Rotate(mouseDir.y * mouseSpeed * deltaTime, { 1.0f, 0.0f, 0.0f });
@@ -81,8 +99,37 @@ void App3D::update(float deltaTime)
 	float FoV = initialFoV - 5.0f * m_camera->GetScroll();
 
 	m_camera->Perspective(glm::radians(FoV), (float)width / (float)height, 0.1f, 100.0f);
+
+	// animate leg
+	float s = glm::cos(getTime()) * 0.5f + 0.5f;
+	// linearly interpolate hip position
+	glm::vec3 p = (1.0f - s) * m_hipFrames[0].position + s * m_hipFrames[1].position;
+	// spherically interpolate hip rotation
+	glm::quat r = glm::slerp(m_hipFrames[0].rotation, m_hipFrames[1].rotation, s);
+	// update the hip bone
+	m_hipBone = glm::translate(p) * glm::toMat4(r);
+
+	s = glm::cos(getTime()) * 0.5f + 0.5f;
+	// linearly interpolate knee position
+	p = (1.0f - s) * m_kneeFrames[0].position + s * m_kneeFrames[1].position;
+	// spherically interpolate knee rotation
+	r = glm::slerp(m_kneeFrames[0].rotation, m_kneeFrames[1].rotation, s);
+	// update the knee bone
+	m_kneeBone = glm::translate(p) * glm::toMat4(r);
+	// concatenates the knee bone with the hip bone
+	m_kneeBone = m_hipBone * m_kneeBone;
+
+	s = glm::cos(getTime()) * 0.5f + 0.5f;
+	// linearly interpolate ankle position
+	p = (1.0f - s) * m_ankleFrames[0].position + s * m_ankleFrames[1].position;
+	// spherically interpolate ankle rotation
+	r = glm::slerp(m_ankleFrames[0].rotation, m_ankleFrames[1].rotation, s);
+	// update the ankle bone
+	m_ankleBone = glm::translate(p) * glm::toMat4(r);
+	// concatenates the ankle bone with the knee bone
+	m_ankleBone = m_kneeBone * m_ankleBone;
 }
-void App3D::draw()
+void AnimationApp::draw()
 {
 	aie::Gizmos::addTransform(glm::mat4(1.0f));
 
@@ -100,10 +147,32 @@ void App3D::draw()
 			(i == 10) ? white : black);
 	}
 
+	glm::vec3 half(0.5f);
+	// use time to animate a value between [0, 1]
+	float s = glm::cos(getTime()) * 0.5f + 0.5f;
+	// standard linear interpolation
+	glm::vec3 p = (1.0f - s) * m_positions[0] + s * m_positions[1];
+	// quaternion slerp
+	glm::quat r = glm::slerp(m_rotations[0], m_rotations[1], s);
+	// build a matrix
+	glm::mat4 m = glm::translate(p) * glm::toMat4(r);
+	// draw a transform and box
+	aie::Gizmos::addTransform(m);
+	aie::Gizmos::addAABBFilled(p, half, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), &m);
+
+	glm::vec3 hipPos = glm::vec3(m_hipBone[3][0], m_hipBone[3][1], m_hipBone[3][2]);
+	glm::vec3 kneePos = glm::vec3(m_kneeBone[3][0], m_kneeBone[3][1], m_kneeBone[3][2]);
+	glm::vec3 anklePos = glm::vec3(m_ankleBone[3][0], m_ankleBone[3][1], m_ankleBone[3][2]);
+	glm::vec4 pink(1.0f, 0.0f, 1.0f, 1.0f);
+
+	aie::Gizmos::addAABBFilled(hipPos, half, pink, &m_hipBone);
+	aie::Gizmos::addAABBFilled(kneePos, half, pink, &m_kneeBone);
+	aie::Gizmos::addAABBFilled(anklePos, half, pink, &m_ankleBone);
+
 	aie::Gizmos::draw(m_camera->GetProjectionView());
 }
 
-void App3D::RunApp()
+void AnimationApp::RunApp()
 {
 	// initialises
 	if (glfwInit() == false)

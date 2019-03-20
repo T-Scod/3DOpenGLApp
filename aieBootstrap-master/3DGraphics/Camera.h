@@ -1,6 +1,10 @@
 #pragma once
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+
+// forward declared structure for access to GLFW window
+struct GLFWwindow;
 
 class Camera
 {
@@ -24,6 +28,9 @@ public:
 	void Translate(const glm::vec3& position);
 	void SetModel(const glm::mat4& model);
 	glm::mat4 GetModel() const { return m_model; }
+
+	static void ScrollCallback(GLFWwindow* window, double x, double y);
+	float GetScroll() const;
 
 protected:
 	glm::mat4 m_model;
