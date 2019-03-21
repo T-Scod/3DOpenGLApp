@@ -5,6 +5,8 @@
 #include <glm/ext.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include "Shader.h"
+#include "Mesh.h"
 
 class App3D : public aie::Application
 {
@@ -28,4 +30,8 @@ public:
 
 protected:
 	Camera* m_camera;
+
+	aie::ShaderProgram m_shader;
+	Mesh m_quadMesh;
+	glm::mat4 m_quadTransform;
 };

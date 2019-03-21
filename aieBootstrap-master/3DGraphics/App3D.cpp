@@ -18,6 +18,39 @@ bool App3D::startup()
 	m_camera->LookAt(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	m_camera->Perspective(glm::pi<float>() * 0.25f, 1280.0f / 720.0f, 0.1f, 100.0f);
 
+	m_shader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/simple.vert");
+	m_shader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/simple.frag");
+
+	if (m_shader.link() == false)
+	{
+		printf("Shader Error: %s\n", m_shader.getLastError());
+		return false;
+	}
+
+	//// define 6 vertices for 2 triangles
+	//Mesh::Vertex vertices[6];
+	//vertices[0].position = { -0.5f, 0, 0.5f, 1 };
+	//vertices[1].position = { 0.5f, 0, 0.5f, 1 };
+	//vertices[2].position = { -0.5f, 0, -0.5f, 1 };
+	//vertices[3].position = { -0.5f, 0, -0.5f, 1 };
+	//vertices[4].position = { 0.5f, 0, 0.5f, 1 };
+	//vertices[5].position = { 0.5f, 0, -0.5f, 1 };
+	//m_quadMesh.Initialise(6, vertices);
+
+	// define 4 vertices for 2 triangles
+	Mesh::Vertex vertices[4];
+	vertices[0].position = { -0.5f, 0, 0.5f, 1 };
+	vertices[1].position = { 0.5f, 0, 0.5f, 1 };
+	vertices[2].position = { -0.5f, 0, -0.5f, 1 };
+	vertices[3].position = { 0.5f, 0, -0.5f, 1 };
+	unsigned int indices[6] = { 0, 1, 2, 2, 1, 3 };
+	m_quadMesh.Initialise(4, vertices, 6, indices);
+
+	m_quadTransform = { 10, 0, 0, 0,
+						0, 10, 0, 0,
+						0, 0, 10, 0,
+						0, 0, 0, 1 };
+
 	return true;
 }
 void App3D::shutdown()
@@ -73,14 +106,14 @@ void App3D::update(float deltaTime)
 	glfwSetCursorPos(m_window, (double)width / 2.0, (double)height / 2.0);
 	glm::vec2 mouseDir = { ((double)width / 2.0) - xPos, ((double)height / 2.0) - yPos};
 
-	m_camera->Rotate(mouseDir.x * mouseSpeed * deltaTime, m_camera->GetView() * glm::vec4({ 0.0f, 1.0f, 0.0f, 0.0f }));
+	m_camera->Rotate(mouseDir.x * mouseSpeed * deltaTime, m_camera->GetView() * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 	m_camera->Rotate(mouseDir.y * mouseSpeed * deltaTime, { 1.0f, 0.0f, 0.0f });
 
-	static float initialFoV = 45.0f;
+	float initialFoV = 45.0f;
 	glfwSetScrollCallback(m_window, m_camera->ScrollCallback);
-	float FoV = initialFoV - 5.0f * m_camera->GetScroll();
+	initialFoV = initialFoV - 5.0f * m_camera->GetScroll();
 
-	m_camera->Perspective(glm::radians(FoV), (float)width / (float)height, 0.1f, 100.0f);
+	m_camera->Perspective(glm::radians(initialFoV), (float)width / (float)height, 0.1f, 100.0f);
 }
 void App3D::draw()
 {
@@ -100,7 +133,16 @@ void App3D::draw()
 			(i == 10) ? white : black);
 	}
 
+	// bind shader
+	m_shader.bind();
+	// bind transform
+	glm::mat4 pvm = m_camera->GetProjectionView() * m_quadTransform;
+	m_shader.bindUniform("ProjectionViewModel", pvm);
+	// draw quad
+	m_quadMesh.Draw();
+
 	aie::Gizmos::draw(m_camera->GetProjectionView());
+	aie::Gizmos::draw2D((float)getWindowWidth(), (float)getWindowHeight());
 }
 
 void App3D::RunApp()

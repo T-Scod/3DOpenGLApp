@@ -58,7 +58,6 @@ void Camera::ScrollCallback(GLFWwindow * window, double x, double y)
 {
 	m_scroll += (float)y;
 }
-
 float Camera::GetScroll() const
 {
 	return m_scroll;

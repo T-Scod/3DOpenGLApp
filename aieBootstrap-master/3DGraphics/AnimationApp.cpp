@@ -4,6 +4,7 @@
 #include <iostream>
 #include <Gizmos.h>
 #include <glm/gtx/transform.hpp>
+#include "BoundingSphere.h"
 
 AnimationApp::AnimationApp()
 {
@@ -91,7 +92,7 @@ void AnimationApp::update(float deltaTime)
 	glfwSetCursorPos(m_window, (double)width / 2.0, (double)height / 2.0);
 	glm::vec2 mouseDir = { ((double)width / 2.0) - xPos, ((double)height / 2.0) - yPos };
 
-	m_camera->Rotate(mouseDir.x * mouseSpeed * deltaTime, m_camera->GetView() * glm::vec4({ 0.0f, 1.0f, 0.0f, 0.0f }));
+	m_camera->Rotate(mouseDir.x * mouseSpeed * deltaTime, m_camera->GetView() * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 	m_camera->Rotate(mouseDir.y * mouseSpeed * deltaTime, { 1.0f, 0.0f, 0.0f });
 
 	static float initialFoV = 45.0f;
@@ -168,6 +169,28 @@ void AnimationApp::draw()
 	aie::Gizmos::addAABBFilled(hipPos, half, pink, &m_hipBone);
 	aie::Gizmos::addAABBFilled(kneePos, half, pink, &m_kneeBone);
 	aie::Gizmos::addAABBFilled(anklePos, half, pink, &m_ankleBone);
+
+	BoundingSphere sphere;
+	sphere.centre = glm::vec3(0.0f, cosf(getTime()) + 1.0f, 0.0f);
+	sphere.radius = 0.5f;
+
+	glm::vec4 plane(0.0f, 1.0f, 0.0f, 1.0f);
+
+	float d = glm::dot(glm::vec3(plane), sphere.centre - plane.w);
+	aie::Gizmos::addSphere(sphere.centre, sphere.radius, 8, 8, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+
+	glm::vec4 planeColour(1.0f, 1.0, 0.0f, 1.0f);
+	if (d > sphere.radius)
+	{
+		planeColour = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+	}
+	else if (d < -sphere.radius)
+	{
+		planeColour = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	}
+
+	aie::Gizmos::addTri(glm::vec3(4.0f, 1.0f, 4.0f), glm::vec3(-4.0f, 1.0f, -4.0f), glm::vec3(-4.0f, 1.0f, 4.0f), planeColour);
+	aie::Gizmos::addTri(glm::vec3(4.0f, 1.0f, 4.0f), glm::vec3(4.0f, 1.0f, -4.0f), glm::vec3(-4.0f, 1.0f, -4.0f), planeColour);
 
 	aie::Gizmos::draw(m_camera->GetProjectionView());
 }
