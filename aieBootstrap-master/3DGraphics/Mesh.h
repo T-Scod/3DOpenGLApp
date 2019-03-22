@@ -5,7 +5,7 @@
 class Mesh
 {
 public:
-	Mesh();
+	Mesh(const unsigned int maxTris);
 	~Mesh();
 
 	struct Vertex
@@ -15,10 +15,22 @@ public:
 		glm::vec2 textCoord;
 	};
 
-	void Initialise(unsigned int vertexCount, const Vertex* vertices, unsigned int indexCount = 0, unsigned int* indices = nullptr);
+	void AddTri(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec4& colour);
+	void AddBox(const glm::vec3& center, const glm::vec3& extents,
+		const glm::vec4& colour, const glm::mat4* transform = nullptr);
+	void AddCylinder(const glm::vec3& center, const float radius, const float halfLength,
+		const unsigned int segments, const glm::vec4& colour, const glm::mat4* transform = nullptr);
+	void AddPyramid(const glm::vec3& center, const float halfHeight, const float halfWidth,
+		const glm::vec4& colour, const glm::mat4* transform);
+	void AddSphere(const glm::vec3& center, const float radius, int rows, const int columns, const glm::vec4& colour,
+		const glm::mat4* transform = nullptr, const float longMin = 0.0f, const float longMax = 360.0f, const float latMin = -90.0f, const float latMax = 90.0f);
 	virtual void Draw();
 
 protected:
-	unsigned int m_triCount;
+	unsigned int m_maxTris;
+	Vertex* m_vertices;
+	unsigned int m_vertexCount;
+	unsigned int* m_indices;
+	unsigned int m_indexCount;
 	unsigned int m_vao, m_vbo, m_ibo;
 };

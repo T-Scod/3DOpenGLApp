@@ -32,6 +32,6 @@ protected:
 	Camera* m_camera;
 
 	aie::ShaderProgram m_shader;
-	Mesh m_quadMesh;
-	glm::mat4 m_quadTransform;
+	Mesh* m_mesh;
+	glm::mat4* m_transform;
 };

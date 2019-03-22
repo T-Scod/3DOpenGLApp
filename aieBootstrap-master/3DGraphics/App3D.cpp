@@ -27,29 +27,17 @@ bool App3D::startup()
 		return false;
 	}
 
-	//// define 6 vertices for 2 triangles
-	//Mesh::Vertex vertices[6];
-	//vertices[0].position = { -0.5f, 0, 0.5f, 1 };
-	//vertices[1].position = { 0.5f, 0, 0.5f, 1 };
-	//vertices[2].position = { -0.5f, 0, -0.5f, 1 };
-	//vertices[3].position = { -0.5f, 0, -0.5f, 1 };
-	//vertices[4].position = { 0.5f, 0, 0.5f, 1 };
-	//vertices[5].position = { 0.5f, 0, -0.5f, 1 };
-	//m_quadMesh.Initialise(6, vertices);
+	m_transform = new glm::mat4({ 5, 0, 0, 0,
+									  0, 5, 0, 0,
+									  0, 0, 5, 0,
+									  0, 0, 0, 1 });
 
-	// define 4 vertices for 2 triangles
-	Mesh::Vertex vertices[4];
-	vertices[0].position = { -0.5f, 0, 0.5f, 1 };
-	vertices[1].position = { 0.5f, 0, 0.5f, 1 };
-	vertices[2].position = { -0.5f, 0, -0.5f, 1 };
-	vertices[3].position = { 0.5f, 0, -0.5f, 1 };
-	unsigned int indices[6] = { 0, 1, 2, 2, 1, 3 };
-	m_quadMesh.Initialise(4, vertices, 6, indices);
-
-	m_quadTransform = { 10, 0, 0, 0,
-						0, 10, 0, 0,
-						0, 0, 10, 0,
-						0, 0, 0, 1 };
+	m_mesh = new Mesh(1000);
+	m_mesh->AddBox(glm::vec3(-10.0f, 0.0f, 10.0f), glm::vec3(0.5f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	m_mesh->AddBox(glm::vec3(10.0f, 0.0f, -10.0f), glm::vec3(0.5f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	m_mesh->AddCylinder(glm::vec3(-10.0f, 0.0f, -10.0f), 0.5f, 0.5f, 10, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	m_mesh->AddPyramid(glm::vec3(0.0f, 0.0f, 0.0f), 0.5f, 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	m_mesh->AddSphere(glm::vec3(10.0f, 0, 10.0f), 0.5f, 16, 16, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
 
 	return true;
 }
@@ -57,6 +45,10 @@ void App3D::shutdown()
 {
 	delete m_camera;
 	m_camera = nullptr;
+	delete m_mesh;
+	m_mesh = nullptr;
+	delete m_transform;
+	m_transform = nullptr;
 }
 
 void App3D::update(float deltaTime)
@@ -66,54 +58,7 @@ void App3D::update(float deltaTime)
 		m_gameOver = true;
 	}
 
-	glm::vec3 position(0.0f);
-	glm::vec3 forward = { -m_camera->GetView()[0][2], -m_camera->GetView()[1][2], -m_camera->GetView()[2][2] };
-	glm::vec3 up = { m_camera->GetView()[0][1], m_camera->GetView()[1][1], m_camera->GetView()[2][1] };
-	glm::vec3 right = { m_camera->GetView()[0][0], m_camera->GetView()[1][0], m_camera->GetView()[2][0] };
-	float speed = 3.0f;
-	if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		position += forward * speed * deltaTime;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		position -= forward * speed * deltaTime;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		position += right * speed * deltaTime;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		position -= right * speed * deltaTime;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_E) == GLFW_PRESS)
-	{
-		position += up * speed * deltaTime;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_Q) == GLFW_PRESS)
-	{
-		position -= up * speed * deltaTime;
-	}
-
-	m_camera->Translate(position);
-
-	float mouseSpeed = 0.01f;
-	double xPos, yPos;
-	glfwGetCursorPos(m_window, &xPos, &yPos);
-	int width, height;
-	glfwGetWindowSize(m_window, &width, &height);
-	glfwSetCursorPos(m_window, (double)width / 2.0, (double)height / 2.0);
-	glm::vec2 mouseDir = { ((double)width / 2.0) - xPos, ((double)height / 2.0) - yPos};
-
-	m_camera->Rotate(mouseDir.x * mouseSpeed * deltaTime, m_camera->GetView() * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	m_camera->Rotate(mouseDir.y * mouseSpeed * deltaTime, { 1.0f, 0.0f, 0.0f });
-
-	float initialFoV = 45.0f;
-	glfwSetScrollCallback(m_window, m_camera->ScrollCallback);
-	initialFoV = initialFoV - 5.0f * m_camera->GetScroll();
-
-	m_camera->Perspective(glm::radians(initialFoV), (float)width / (float)height, 0.1f, 100.0f);
+	m_camera->Update(deltaTime);
 }
 void App3D::draw()
 {
@@ -136,13 +81,12 @@ void App3D::draw()
 	// bind shader
 	m_shader.bind();
 	// bind transform
-	glm::mat4 pvm = m_camera->GetProjectionView() * m_quadTransform;
-	m_shader.bindUniform("ProjectionViewModel", pvm);
+	glm::mat4 pv = m_camera->GetProjectionView();
+	m_shader.bindUniform("ProjectionViewModel", pv);
 	// draw quad
-	m_quadMesh.Draw();
+	m_mesh->Draw();
 
 	aie::Gizmos::draw(m_camera->GetProjectionView());
-	aie::Gizmos::draw2D((float)getWindowWidth(), (float)getWindowHeight());
 }
 
 void App3D::RunApp()
@@ -186,6 +130,7 @@ void App3D::RunApp()
 	// sets the background colour
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 
 	aie::Gizmos::create(256, 256, 32768, 32768);
 

@@ -13,6 +13,7 @@ public:
 	Camera(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection);
 	~Camera();
 
+	void Update(const float deltaTime);
 	glm::mat4 GetProjectionView() const { return (m_projection * m_view); }
 
 	void Perspective(const float fieldOfView, const float aspectRatio, const float near, const float far);
