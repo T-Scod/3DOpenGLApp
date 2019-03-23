@@ -32,7 +32,7 @@ bool App3D::startup()
 									  0, 0, 5, 0,
 									  0, 0, 0, 1 });
 
-	m_mesh = new Mesh(1000);
+	m_mesh = new Mesh(1000, 1000);
 	m_mesh->AddBox(glm::vec3(-10.0f, 0.0f, 10.0f), glm::vec3(0.5f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
 	m_mesh->AddBox(glm::vec3(10.0f, 0.0f, -10.0f), glm::vec3(0.5f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
 	m_mesh->AddCylinder(glm::vec3(-10.0f, 0.0f, -10.0f), 0.5f, 0.5f, 10, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
