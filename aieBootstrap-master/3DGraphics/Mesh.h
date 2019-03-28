@@ -12,11 +12,13 @@ public:
 	{
 		glm::vec4 position;
 		glm::vec4 normal;
-		glm::vec2 textCoord;
+		glm::vec2 texCoord;
 	};
 
 	void AddLine(const glm::vec3& v0, const glm::vec3& v1, const glm::vec4& colour);
 	void AddTri(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec4& colour);
+	void AddQuad(const glm::vec3& center, const glm::vec2& extents,
+		const glm::vec4& colour, const glm::mat4* transform = nullptr);
 	void AddBox(const glm::vec3& center, const glm::vec3& extents,
 		const glm::vec4& colour, const glm::mat4* transform = nullptr);
 	void AddCylinder(const glm::vec3& center, const float radius, const float halfLength,

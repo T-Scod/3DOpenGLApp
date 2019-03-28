@@ -25,6 +25,8 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="OBJMesh.cpp" />
+    <ClCompile Include="RenderingApp.cpp" />
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -39,11 +41,16 @@
     <ClInclude Include="BoundingSphere.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="OBJMesh.h" />
+    <ClInclude Include="RenderingApp.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\bin\shaders\simple.frag" />
-    <None Include="..\bin\shaders\simple.vert" />
+    <None Include="..\bin\shaders\simpleColour.frag" />
+    <None Include="..\bin\shaders\simpleColour.vert" />
+    <None Include="..\bin\shaders\simpleTexture.frag" />
+    <None Include="..\bin\shaders\simpleTexture.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

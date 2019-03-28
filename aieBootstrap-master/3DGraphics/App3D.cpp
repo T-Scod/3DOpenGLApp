@@ -27,17 +27,16 @@ bool App3D::startup()
 		return false;
 	}
 
-	m_transform = new glm::mat4({ 5, 0, 0, 0,
-									  0, 5, 0, 0,
-									  0, 0, 5, 0,
-									  0, 0, 0, 1 });
+	if (m_objMesh.load("../bin/stanford/buddha.obj") == false)
+	{
+		printf("Bunny Mesh Error!\n");
+		return false;
+	}
 
-	m_mesh = new Mesh(1000, 1000);
-	m_mesh->AddBox(glm::vec3(-10.0f, 0.0f, 10.0f), glm::vec3(0.5f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
-	m_mesh->AddBox(glm::vec3(10.0f, 0.0f, -10.0f), glm::vec3(0.5f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
-	m_mesh->AddCylinder(glm::vec3(-10.0f, 0.0f, -10.0f), 0.5f, 0.5f, 10, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
-	m_mesh->AddPyramid(glm::vec3(0.0f, 0.0f, 0.0f), 0.5f, 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
-	m_mesh->AddSphere(glm::vec3(10.0f, 0, 10.0f), 0.5f, 16, 16, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	m_objTransform = { 0.5f, 0.0f, 0.0f, 0.0f,
+						 0.0f, 0.5f, 0.0f, 0.0f,
+						 0.0f, 0.0f, 0.5f, 0.0f,
+						 0.0f, 0.0f, 0.0f, 1.0f };
 
 	return true;
 }
@@ -45,10 +44,6 @@ void App3D::shutdown()
 {
 	delete m_camera;
 	m_camera = nullptr;
-	delete m_mesh;
-	m_mesh = nullptr;
-	delete m_transform;
-	m_transform = nullptr;
 }
 
 void App3D::update(float deltaTime)
@@ -81,10 +76,10 @@ void App3D::draw()
 	// bind shader
 	m_shader.bind();
 	// bind transform
-	glm::mat4 pv = m_camera->GetProjectionView();
-	m_shader.bindUniform("ProjectionViewModel", pv);
-	// draw quad
-	m_mesh->Draw();
+	glm::mat4 pvm = m_camera->GetProjectionView() * m_objTransform;
+	m_shader.bindUniform("ProjectionViewModel", pvm);
+
+	m_objMesh.draw();
 
 	aie::Gizmos::draw(m_camera->GetProjectionView());
 }

@@ -31,8 +31,10 @@ Mesh::Mesh(const unsigned int maxTris, const unsigned int maxlines) : m_triIndex
 	// enable first element as position
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)16);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)16);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)32);
 
 	// generate vertex array
 	glGenVertexArrays(1, &m_lineVAO);
@@ -194,6 +196,40 @@ void Mesh::AddTri(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec3 & 
 	}
 }
 
+void Mesh::AddQuad(const glm::vec3 & center, const glm::vec2 & extents,
+	const glm::vec4 & colour, const glm::mat4 * transform)
+{
+	glm::vec3 verts[4];
+	glm::vec3 tempCenter = center;
+	glm::vec3 vX(extents.x, 0.0f, 0.0f);
+	glm::vec3 vZ(0.0f, 0.0f, extents.y);
+
+	if (transform != nullptr)
+	{
+		vX = glm::vec3(*transform * glm::vec4(vX, 0.0f));
+		vZ = glm::vec3(*transform * glm::vec4(vZ, 0.0f));
+		tempCenter = glm::vec3((*transform)[3]) + tempCenter;
+	}
+
+	verts[0] = tempCenter - vX - vZ;
+	verts[1] = tempCenter - vX + vZ;
+	verts[2] = tempCenter + vX + vZ;
+	verts[3] = tempCenter + vX - vZ;
+
+	AddTri(verts[0], verts[1], verts[2], colour);
+	AddTri(verts[2], verts[3], verts[0], colour);
+
+	m_triVertices[m_triVertexCount - 4].texCoord = { 0, 0 };
+	m_triVertices[m_triVertexCount - 3].texCoord = { 0, 1 };
+	m_triVertices[m_triVertexCount - 2].texCoord = { 1, 1 };
+	m_triVertices[m_triVertexCount - 1].texCoord = { 1, 0 };
+
+	m_triVertices[m_triVertexCount - 4].normal = { 0, 1, 0, 0 };
+	m_triVertices[m_triVertexCount - 3].normal = { 0, 1, 0, 0 };
+	m_triVertices[m_triVertexCount - 2].normal = { 0, 1, 0, 0 };
+	m_triVertices[m_triVertexCount - 1].normal = { 0, 1, 0, 0 };
+}
+
 void Mesh::AddBox(const glm::vec3& center, const glm::vec3& extents,
 	const glm::vec4& colour, const glm::mat4* transform)
 {
@@ -211,17 +247,15 @@ void Mesh::AddBox(const glm::vec3& center, const glm::vec3& extents,
 		tempCenter = glm::vec3((*transform)[3]) + tempCenter;
 	}
 
-	// top verts
-	verts[0] = tempCenter - vX - vZ - vY;
-	verts[1] = tempCenter - vX + vZ - vY;
-	verts[2] = tempCenter + vX + vZ - vY;
-	verts[3] = tempCenter + vX - vZ - vY;
+	verts[0] = tempCenter - vX - vY - vZ;
+	verts[1] = tempCenter - vX - vY + vZ;
+	verts[2] = tempCenter + vX - vY + vZ;
+	verts[3] = tempCenter + vX - vY - vZ;
 
-	// bottom verts
-	verts[4] = tempCenter - vX - vZ + vY;
-	verts[5] = tempCenter - vX + vZ + vY;
-	verts[6] = tempCenter + vX + vZ + vY;
-	verts[7] = tempCenter + vX - vZ + vY;
+	verts[4] = tempCenter - vX + vY - vZ;
+	verts[5] = tempCenter - vX + vY + vZ;
+	verts[6] = tempCenter + vX + vY + vZ;
+	verts[7] = tempCenter + vX + vY - vZ;
 
 	glm::vec4 white(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -243,31 +277,29 @@ void Mesh::AddBox(const glm::vec3& center, const glm::vec3& extents,
 	// top
 	AddTri(verts[2], verts[1], verts[0], colour);
 	AddTri(verts[3], verts[2], verts[0], colour);
-
 	// bottom
 	AddTri(verts[5], verts[6], verts[4], colour);
 	AddTri(verts[6], verts[7], verts[4], colour);
-
 	// front
 	AddTri(verts[4], verts[3], verts[0], colour);
 	AddTri(verts[7], verts[3], verts[4], colour);
-
 	// back
 	AddTri(verts[1], verts[2], verts[5], colour);
 	AddTri(verts[2], verts[6], verts[5], colour);
-
 	// left
 	AddTri(verts[0], verts[1], verts[4], colour);
 	AddTri(verts[1], verts[5], verts[4], colour);
-
 	// right
 	AddTri(verts[2], verts[3], verts[7], colour);
 	AddTri(verts[6], verts[2], verts[7], colour);
 }
 
-void Mesh::AddCylinder(const glm::vec3 & center, const float radius, const float halfLength, const unsigned int segments, const glm::vec4 & colour, const glm::mat4 * transform)
+void Mesh::AddCylinder(const glm::vec3 & center, const float radius, const float halfLength,
+	const unsigned int segments, const glm::vec4 & colour, const glm::mat4 * transform)
 {
 	glm::vec3 tempCenter = transform != nullptr ? glm::vec3((*transform)[3]) + center : center;
+
+	glm::vec4 white(1, 1, 1, 1);
 
 	float segmentSize = (2.0f * glm::pi<float>()) / segments;
 
@@ -295,16 +327,23 @@ void Mesh::AddCylinder(const glm::vec3 & center, const float radius, const float
 		AddTri(tempCenter + v0bottom, tempCenter + v2bottom, tempCenter + v1bottom, colour);
 		AddTri(tempCenter + v2top, tempCenter + v1top, tempCenter + v1bottom, colour);
 		AddTri(tempCenter + v1bottom, tempCenter + v2bottom, tempCenter + v2top, colour);
+
+		// lines
+		AddLine(tempCenter + v1top, tempCenter + v2top, white);
+		AddLine(tempCenter + v1top, tempCenter + v1bottom, white);
+		AddLine(tempCenter + v1bottom, tempCenter + v2bottom, white);
 	}
 }
 
-void Mesh::AddPyramid(const glm::vec3 & center, const float halfHeight, const float halfWidth, const glm::vec4 & colour, const glm::mat4 * transform)
+void Mesh::AddPyramid(const glm::vec3 & center, const float halfHeight, const float halfWidth,
+	const glm::vec4 & colour, const glm::mat4 * transform)
 {
 	glm::vec3 verts[5];
 	glm::vec3 up(0.0f, halfHeight, 0.0f);
 	glm::vec3 right(halfWidth, 0.0f, 0.0f);
 	glm::vec3 forward(0.0f, 0.0f, halfWidth);
 	glm::vec3 tempCenter = transform != nullptr ? glm::vec3((*transform)[3]) + center : center;
+	glm::vec4 white(1.0f, 1.0f, 1.0f, 1.0f);
 
 	if (transform != nullptr)
 	{
@@ -325,9 +364,19 @@ void Mesh::AddPyramid(const glm::vec3 & center, const float halfHeight, const fl
 	AddTri(verts[2], verts[1], verts[4], colour);
 	AddTri(verts[3], verts[2], verts[4], colour);
 	AddTri(verts[0], verts[3], verts[4], colour);
+
+	AddLine(verts[0], verts[1], white);
+	AddLine(verts[1], verts[2], white);
+	AddLine(verts[2], verts[3], white);
+	AddLine(verts[3], verts[0], white);
+	AddLine(verts[0], verts[4], white);
+	AddLine(verts[1], verts[4], white);
+	AddLine(verts[2], verts[4], white);
+	AddLine(verts[3], verts[4], white);
 }
 
-void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, const int columns, const glm::vec4 & colour, const glm::mat4 * transform, const float longMin, const float longMax, const float latMin, const float latMax)
+void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, const int columns, const glm::vec4 & colour,
+	const glm::mat4 * transform, const float longMin, const float longMax, const float latMin, const float latMax)
 {
 	float inverseRadius = 1 / radius;
 
@@ -372,20 +421,28 @@ void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, con
 		}
 	}
 
+	glm::vec4 white(1.0f, 1.0f, 1.0f, 1.0f);
+
 	for (int face = 0; face < (rows * columns); face++)
 	{
-		int iNextFace = face + 1;
+		int nextFace = face + 1;
 
-		if (iNextFace % columns == 0)
+		if (nextFace % columns == 0)
 		{
-			iNextFace = iNextFace - (columns);
+			nextFace = nextFace - (columns);
 		}
 
-		if (face % columns == 0 && longitudinalRange < (glm::pi<float>() * 2))
-			continue;
+		AddLine(tempCenter + globe[face], tempCenter + globe[face + columns], white);
 
-		AddTri(tempCenter + globe[iNextFace + columns], tempCenter + globe[face], tempCenter + globe[iNextFace], colour);
-		AddTri(tempCenter + globe[iNextFace + columns], tempCenter + globe[face + columns], tempCenter + globe[face], colour);
+		if (face % columns == 0 && longitudinalRange < (glm::pi<float>() * 2))
+		{
+			continue;
+		}
+
+		AddLine(tempCenter + globe[nextFace + columns], tempCenter + globe[face + columns], white);
+
+		AddTri(tempCenter + globe[nextFace + columns], tempCenter + globe[face], tempCenter + globe[nextFace], colour);
+		AddTri(tempCenter + globe[nextFace + columns], tempCenter + globe[face + columns], tempCenter + globe[face], colour);
 	}
 
 	delete[] globe;
