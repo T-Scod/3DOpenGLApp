@@ -30,19 +30,30 @@ public:
 	void RunApp();
 
 protected:
+	struct Light
+	{
+		glm::vec3 direction;
+		glm::vec3 diffuse;
+		glm::vec3 specular;
+	};
+
 	Camera* m_camera;
-	aie::ShaderProgram m_simpleShader;
-	aie::ShaderProgram m_textureShader;
-	aie::ShaderProgram m_spearShader;
+	//aie::ShaderProgram m_simpleShader;
+	//aie::ShaderProgram m_textureShader;
+	//aie::ShaderProgram m_spearShader;
+	aie::ShaderProgram m_phongShader;
 
-	Mesh* m_mesh;
-	glm::mat4* m_transform;
+	//Mesh* m_mesh;
+	//glm::mat4* m_transform;
 
-	aie::OBJMesh m_objMesh;
-	glm::mat4 m_objTransform;
+	//aie::OBJMesh m_objMesh;
+	//glm::mat4 m_objTransform;
 
-	Mesh* m_quadMesh;
-	aie::Texture m_gridTexture;
+	//Mesh* m_quadMesh;
+	//aie::Texture m_gridTexture;
 
 	aie::OBJMesh m_spearMesh;
+
+	Light m_light;
+	glm::vec3 m_ambientLight;
 };

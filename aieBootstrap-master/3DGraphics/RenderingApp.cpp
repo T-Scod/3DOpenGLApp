@@ -18,55 +18,62 @@ bool RenderingApp::startup()
 	m_camera->LookAt(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	m_camera->Perspective(glm::pi<float>() * 0.25f, 1280.0f / 720.0f, 0.1f, 100.0f);
 
-	m_simpleShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/simpleColour.vert");
-	m_simpleShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/simpleColour.frag");
-	if (m_simpleShader.link() == false)
+	//m_simpleShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/simpleColour.vert");
+	//m_simpleShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/simpleColour.frag");
+	//if (m_simpleShader.link() == false)
+	//{
+	//	printf("Shader Error: %s\n", m_simpleShader.getLastError());
+	//	return false;
+	//}
+	//m_textureShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/simpleTexture.vert");
+	//m_textureShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/simpleTexture.frag");
+	//if (m_textureShader.link() == false)
+	//{
+	//	printf("Texture Shader Error: %s\n", m_textureShader.getLastError());
+	//	return false;
+	//}
+	//m_spearShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/simpleTexture.vert");
+	//m_spearShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/simpleTexture.frag");
+	//if (m_spearShader.link() == false)
+	//{
+	//	printf("Texture Shader Error: %s\n", m_spearShader.getLastError());
+	//	return false;
+	//}
+	m_phongShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/Phong.vert");
+	m_phongShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/Phong.frag");
+	if (m_phongShader.link() == false)
 	{
-		printf("Shader Error: %s\n", m_simpleShader.getLastError());
-		return false;
-	}
-	m_textureShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/simpleTexture.vert");
-	m_textureShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/simpleTexture.frag");
-	if (m_textureShader.link() == false)
-	{
-		printf("Texture Shader Error: %s\n", m_textureShader.getLastError());
-		return false;
-	}
-	m_spearShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/simpleTexture.vert");
-	m_spearShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/simpleTexture.frag");
-	if (m_spearShader.link() == false)
-	{
-		printf("Texture Shader Error: %s\n", m_spearShader.getLastError());
+		printf("Phong Shader Error!\n", m_phongShader.getLastError());
 		return false;
 	}
 
-	m_transform = new glm::mat4({ 10, 0, 0, 0,
-								  0, 10, 0, 0,
-								  0, 0, 10, 0,
-								  0, 0, 0, 1 });
-	m_mesh = new Mesh(1000, 1000);
-	m_mesh->AddBox(glm::vec3(-20.0f, 0.0f, 20.0f), glm::vec3(0.5f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
-	m_mesh->AddCylinder(glm::vec3(-20.0f, 0.0f, -20.0f), 0.5f, 0.5f, 10, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
-	m_mesh->AddPyramid(glm::vec3(20.0f, 0.0f, -20.0f), 0.5f, 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
-	m_mesh->AddSphere(glm::vec3(20.0f, 0, 20.0f), 0.5f, 16, 16, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	//m_transform = new glm::mat4({ 10, 0, 0, 0,
+	//							  0, 10, 0, 0,
+	//							  0, 0, 10, 0,
+	//							  0, 0, 0, 1 });
+	//m_mesh = new Mesh(1000, 1000);
+	//m_mesh->AddBox(glm::vec3(-20.0f, 0.0f, 20.0f), glm::vec3(0.5f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	//m_mesh->AddCylinder(glm::vec3(-20.0f, 0.0f, -20.0f), 0.5f, 0.5f, 10, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	//m_mesh->AddPyramid(glm::vec3(20.0f, 0.0f, -20.0f), 0.5f, 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	//m_mesh->AddSphere(glm::vec3(20.0f, 0, 20.0f), 0.5f, 16, 16, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
 
-	if (m_gridTexture.load("../bin/textures/numbered_grid.tga") == false)
-	{
-		printf("Failed to load texture!\n");
-		return false;
-	}
-	m_quadMesh = new Mesh(2, 4);
-	m_quadMesh->AddQuad(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), m_transform);
+	//if (m_gridTexture.load("../bin/textures/numbered_grid.tga") == false)
+	//{
+	//	printf("Failed to load texture!\n");
+	//	return false;
+	//}
+	//m_quadMesh = new Mesh(2, 4);
+	//m_quadMesh->AddQuad(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 
-	if (m_objMesh.load("../bin/stanford/buddha.obj") == false)
-	{
-		printf("Bunny Mesh Error!\n");
-		return false;
-	}
-	m_objTransform = { 0.5f, 0.0f, 0.0f, 0.0f,
-						 0.0f, 0.5f, 0.0f, 0.0f,
-						 0.0f, 0.0f, 0.5f, 0.0f,
-						 -0.08f, 0.0f, -0.07f, 1.0f };
+	//if (m_objMesh.load("../bin/stanford/buddha.obj") == false)
+	//{
+	//	printf("Bunny Mesh Error!\n");
+	//	return false;
+	//}
+	//m_objTransform = { 0.5f, 0.0f, 0.0f, 0.0f,
+	//					 0.0f, 0.5f, 0.0f, 0.0f,
+	//					 0.0f, 0.0f, 0.5f, 0.0f,
+	//					 -0.08f, 0.0f, -0.07f, 1.0f };
 
 	if (m_spearMesh.load("../bin/soulspear/soulspear.obj", true, true) == false)
 	{
@@ -74,16 +81,20 @@ bool RenderingApp::startup()
 		return false;
 	}
 
+	m_light.diffuse = { 1.0f, 1.0f, 0.0f };
+	m_light.specular = { 1.0f, 1.0f, 0.0f };
+	m_ambientLight = { 0.25f, 0.25f, 0.25f };
+
 	return true;
 }
 void RenderingApp::shutdown()
 {
 	delete m_camera;
 	m_camera = nullptr;
-	delete m_mesh;
-	m_mesh = nullptr;
-	delete m_transform;
-	m_transform = nullptr;
+	//delete m_mesh;
+	//m_mesh = nullptr;
+	//delete m_transform;
+	//m_transform = nullptr;
 }
 
 void RenderingApp::update(float deltaTime)
@@ -94,6 +105,9 @@ void RenderingApp::update(float deltaTime)
 	}
 
 	m_camera->Update(deltaTime);
+
+	float time = getTime();
+	m_light.direction = glm::normalize(glm::vec3(glm::cos(time * 2.0f), glm::sin(time * 2.0f), 0.0f));
 }
 void RenderingApp::draw()
 {
@@ -113,25 +127,34 @@ void RenderingApp::draw()
 			(i == 10) ? white : black);
 	}
 
-	m_simpleShader.bind();
 	glm::mat4 pvm = m_camera->GetProjectionView();
-	m_simpleShader.bindUniform("ProjectionViewModel", pvm);
-	m_mesh->Draw();
+	//m_simpleShader.bind();
+	//m_simpleShader.bindUniform("ProjectionViewModel", pvm);
+	//m_mesh->Draw();
 
-	m_textureShader.bind();
-	m_textureShader.bindUniform("ProjectionViewModel", pvm);
-	m_textureShader.bindUniform("diffuseTexture", 0);
-	m_gridTexture.bind(0);
-	m_quadMesh->Draw();
-
-	m_spearShader.bind();
-	m_spearShader.bindUniform("ProjectionViewModel", pvm);
+	//m_spearShader.bind();
+	//m_spearShader.bindUniform("ProjectionViewModel", pvm);
+	m_phongShader.bind();
+	m_phongShader.bindUniform("Ia", m_ambientLight);
+	m_phongShader.bindUniform("Id", m_light.diffuse);
+	m_phongShader.bindUniform("Is", m_light.specular);
+	m_phongShader.bindUniform("lightDirection", m_light.direction);
+	m_phongShader.bindUniform("ProjectionViewModel", pvm);
+	m_phongShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(1.0f)));
+	m_phongShader.bindUniform("ModelMatrix", m_camera->GetModel());
+	m_phongShader.bindUniform("cameraPosition", glm::vec3(m_camera->GetModel()[3]));
 	m_spearMesh.draw();
 
-	m_simpleShader.bind();
-	pvm = m_camera->GetProjectionView() * m_objTransform;
-	m_simpleShader.bindUniform("ProjectionViewModel", pvm);
-	m_objMesh.draw();
+	//m_textureShader.bind();
+	//m_textureShader.bindUniform("ProjectionViewModel", pvm);
+	//m_textureShader.bindUniform("diffuseTexture", 0);
+	//m_gridTexture.bind(0);
+	//m_quadMesh->Draw();
+
+	//m_simpleShader.bind();
+	//pvm = m_camera->GetProjectionView() * m_objTransform;
+	//m_simpleShader.bindUniform("ProjectionViewModel", pvm);
+	//m_objMesh.draw();
 
 	aie::Gizmos::draw(m_camera->GetProjectionView());
 }
