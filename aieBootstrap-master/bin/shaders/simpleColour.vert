@@ -1,18 +1,21 @@
-// a simple shader
+// a simple colour vertex shader
 #version 410
 
-layout( location = 0 ) in vec4 Position;
-layout( location = 1 ) in vec4 Colour;
-layout( location = 2 ) in vec2 TexCoord;
+// position of the vertex
+layout(location = 0) in vec4 Position;
+// colour of the vertex
+layout(location = 1) in vec4 Colour;
 
+// passes the data onto the fragment shader
 out vec4 vColour;
-out vec2 vTexCoord;
 
+// used to move local-space vertices into clip space
 uniform mat4 ProjectionViewModel;
 
 void main()
 {
+	// stores the clip space position in the GLSL position constant
 	gl_Position = ProjectionViewModel * Position;
+	// outputs the given colour
 	vColour = Colour;
-	vTexCoord = TexCoord;
 }

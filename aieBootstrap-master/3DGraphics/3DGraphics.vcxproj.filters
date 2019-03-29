@@ -91,10 +91,16 @@
     <None Include="..\bin\shaders\simpleColour.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\bin\shaders\Phong.frag">
+    <None Include="..\bin\shaders\normalMap.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\bin\shaders\Phong.vert">
+    <None Include="..\bin\shaders\phong.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\bin\shaders\phong.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\bin\shaders\normalMap.frag">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

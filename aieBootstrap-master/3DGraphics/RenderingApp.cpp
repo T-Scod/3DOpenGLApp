@@ -39,11 +39,18 @@ bool RenderingApp::startup()
 	//	printf("Texture Shader Error: %s\n", m_spearShader.getLastError());
 	//	return false;
 	//}
-	m_phongShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/Phong.vert");
-	m_phongShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/Phong.frag");
-	if (m_phongShader.link() == false)
+	//m_phongShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/phong.vert");
+	//m_phongShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/phong.frag");
+	//if (m_phongShader.link() == false)
+	//{
+	//	printf("Phong Shader Error!\n", m_phongShader.getLastError());
+	//	return false;
+	//}
+	m_normalShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/normalMap.vert");
+	m_normalShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/normalMap.frag");
+	if (m_normalShader.link() == false)
 	{
-		printf("Phong Shader Error!\n", m_phongShader.getLastError());
+		printf("Normal Shader Error!\n", m_normalShader.getLastError());
 		return false;
 	}
 
@@ -63,7 +70,7 @@ bool RenderingApp::startup()
 	//	return false;
 	//}
 	//m_quadMesh = new Mesh(2, 4);
-	//m_quadMesh->AddQuad(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+	//m_quadMesh->AddQuadTextured(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f));
 
 	//if (m_objMesh.load("../bin/stanford/buddha.obj") == false)
 	//{
@@ -80,6 +87,10 @@ bool RenderingApp::startup()
 		printf("Soulspear Mesh Error!\n");
 		return false;
 	}
+	m_spearTransform = { 2.0f, 0.0f, 0.0f, 0.0f,
+						 0.0f, 2.0f, 0.0f, 0.0f,
+						 0.0f, 0.0f, 2.0f, 0.0f,
+						 1.0f, 0.0f, 0.0f, 1.0f };
 
 	m_light.diffuse = { 1.0f, 1.0f, 0.0f };
 	m_light.specular = { 1.0f, 1.0f, 0.0f };
@@ -134,15 +145,15 @@ void RenderingApp::draw()
 
 	//m_spearShader.bind();
 	//m_spearShader.bindUniform("ProjectionViewModel", pvm);
-	m_phongShader.bind();
-	m_phongShader.bindUniform("Ia", m_ambientLight);
-	m_phongShader.bindUniform("Id", m_light.diffuse);
-	m_phongShader.bindUniform("Is", m_light.specular);
-	m_phongShader.bindUniform("lightDirection", m_light.direction);
-	m_phongShader.bindUniform("ProjectionViewModel", pvm);
-	m_phongShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(1.0f)));
-	m_phongShader.bindUniform("ModelMatrix", m_camera->GetModel());
-	m_phongShader.bindUniform("cameraPosition", glm::vec3(m_camera->GetModel()[3]));
+	m_normalShader.bind();
+	m_normalShader.bindUniform("Ia", m_ambientLight);
+	m_normalShader.bindUniform("Id", m_light.diffuse);
+	m_normalShader.bindUniform("Is", m_light.specular);
+	m_normalShader.bindUniform("lightDirection", m_light.direction);
+	m_normalShader.bindUniform("ProjectionViewModel", pvm * m_spearTransform);
+	m_normalShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(m_spearTransform)));
+	m_normalShader.bindUniform("ModelMatrix", m_camera->GetModel());
+	m_normalShader.bindUniform("cameraPosition", glm::vec3(m_camera->GetModel()[3]));
 	m_spearMesh.draw();
 
 	//m_textureShader.bind();

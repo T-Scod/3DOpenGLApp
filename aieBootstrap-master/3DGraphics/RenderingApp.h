@@ -42,6 +42,7 @@ protected:
 	//aie::ShaderProgram m_textureShader;
 	//aie::ShaderProgram m_spearShader;
 	aie::ShaderProgram m_phongShader;
+	aie::ShaderProgram m_normalShader;
 
 	//Mesh* m_mesh;
 	//glm::mat4* m_transform;
@@ -53,6 +54,7 @@ protected:
 	//aie::Texture m_gridTexture;
 
 	aie::OBJMesh m_spearMesh;
+	glm::mat4 m_spearTransform;
 
 	Light m_light;
 	glm::vec3 m_ambientLight;

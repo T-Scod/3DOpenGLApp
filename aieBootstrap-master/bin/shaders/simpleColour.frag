@@ -1,14 +1,14 @@
-// a simple flat colour shader
+// a simple colour fragment shader
 #version 410
 
+// outputs from the vertex shader
 in vec4 vColour;
-in vec2 vTexCoord;
 
-uniform sampler2D diffuseTexture;
-
+// the colour of the pixel
 out vec4 FragColour;
 
 void main()
 {
+	// sets the pixel colour to the given colour
 	FragColour = vColour;
 }

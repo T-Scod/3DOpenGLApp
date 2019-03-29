@@ -1,144 +1,127 @@
 #include "Mesh.h"
 #include <gl_core_4_4.h>
 
-Mesh::Mesh(const unsigned int maxTris, const unsigned int maxlines) : m_triIndexCount(0), m_triVertexCount(0), m_triVAO(0), m_triVBO(0), m_triIBO(0)
+// dedicates space for the mesh based on the maximum amount of tris and lines
+Mesh::Mesh(const unsigned int maxTris, const unsigned int maxlines) :
+	m_triIndexCount(0), m_triVertexCount(0), m_triVAO(0), m_triVBO(0), m_triIBO(0),
+	m_lineVertexCount(0), m_lineVAO(0), m_lineVBO(0)
 {
 	m_maxTris = maxTris;
+	// sets the tri vertices to be 3 times the amount of maximum tris (won't likely fill the space because some vertices will often overlap)
 	m_triVertices = new Vertex[m_maxTris * 3];
+	// sets the tri indices to be 3 time the amount of maximum tris
 	m_triIndices = new unsigned int[m_maxTris * 3];
 	m_maxLines = maxlines;
+	// sets the line vertices to be 2 times the amount of maximum lines
 	m_lineVertices = new Vertex[m_maxLines * 2];
-	//m_lineIndices = new unsigned int[m_maxLines * 2];
 
-	// generate vertex array
+	// generate tri vertex array and bind it
 	glGenVertexArrays(1, &m_triVAO);
-	// bind vertex array
 	glBindVertexArray(m_triVAO);
 
-	// generate buffer
+	// generate vertex buffer, bind it and fill it
 	glGenBuffers(1, &m_triVBO);
-	// bind vertex buffer
 	glBindBuffer(GL_ARRAY_BUFFER, m_triVBO);
-	// fill vertex buffer
 	glBufferData(GL_ARRAY_BUFFER, m_maxTris * 3 * sizeof(Vertex), m_triVertices, GL_DYNAMIC_DRAW);
-	// generate buffer
+	// generate index buffer, bind it and fill it
 	glGenBuffers(1, &m_triIBO);
-	// bind vertex buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_triIBO);
-	// fill vertex buffer
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_maxTris * 3 * sizeof(unsigned int), m_triIndices, GL_DYNAMIC_DRAW);
 
-	// enable first element as position
+	// enable position, colour/normal and texture attributes of the shader for the vertex array
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
+	// points the attribute to the corresponding property of the vertex
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)16);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)32);
 
-	// generate vertex array
+	// generate line vertex array and bind it
 	glGenVertexArrays(1, &m_lineVAO);
-	// bind vertex array
 	glBindVertexArray(m_lineVAO);
 
-	// generate buffer
+	// generate vertex buffer, bind it and fill it
 	glGenBuffers(1, &m_lineVBO);
-	// bind vertex buffer
 	glBindBuffer(GL_ARRAY_BUFFER, m_lineVBO);
-	// fill vertex buffer
 	glBufferData(GL_ARRAY_BUFFER, m_maxLines * 2 * sizeof(Vertex), m_lineVertices, GL_DYNAMIC_DRAW);
-	//// generate buffer
-	//glGenBuffers(1, &m_lineIBO);
-	//// bind vertex buffer
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_lineIBO);
-	//// fill vertex buffer
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_maxLines * 2 * sizeof(unsigned int), m_lineIndices, GL_DYNAMIC_DRAW);
 
-	// enable first element as position
+	// enable position and colour attributes of the shader for the vertex array
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	// points the attribute to the corresponding property of the vertex
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)16);
 
-	// unbind buffers
+	// unbind buffers and arrays
 	glBindVertexArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 Mesh::~Mesh()
 {
+	// dealocate containers
 	delete[] m_triVertices;
 	delete[] m_triIndices;
+	// delete buffers and arrays
 	glDeleteBuffers(1, &m_triVBO);
 	glDeleteBuffers(1, &m_triIBO);
 	glDeleteVertexArrays(1, &m_triVAO);
+	// dealocate container
 	delete[] m_lineVertices;
-	//delete[] m_lineIndices;
+	// delete buffers and arrays
 	glDeleteBuffers(1, &m_lineVBO);
-	//glDeleteBuffers(1, &m_lineIBO);
 	glDeleteVertexArrays(1, &m_lineVAO);
 }
 
+// adds a line from vertex 0 to vertex 1 of the colour
 void Mesh::AddLine(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec4 & colour)
 {
+	// checks if the amount of lines exceed the maximum allowed amount
 	if (((float)m_lineVertexCount / 2.0f) < m_maxLines)
 	{
-		//bool exists[2] = { false, false };
-		//for (int i = 0; i < m_lineVertexCount; i++)
-		//{
-		//	if (glm::vec3(m_lineVertices[i].position) == v0)
-		//	{
-		//		exists[0] = true;
-		//		m_lineIndices[m_lineIndexCount] = i;
-		//	}
-		//	if (glm::vec3(m_lineVertices[i].position) == v1)
-		//	{
-		//		exists[1] = true;
-		//		m_lineIndices[m_lineIndexCount + 1] = i;
-		//	}
-		//}
+		// adds vertex 0's properties to the array
+		m_lineVertices[m_lineVertexCount].position.x = v0.x;
+		m_lineVertices[m_lineVertexCount].position.y = v0.y;
+		m_lineVertices[m_lineVertexCount].position.z = v0.z;
+		m_lineVertices[m_lineVertexCount].position.w = 1;
+		m_lineVertices[m_lineVertexCount].normal.x = colour.x;
+		m_lineVertices[m_lineVertexCount].normal.y = colour.y;
+		m_lineVertices[m_lineVertexCount].normal.z = colour.z;
+		m_lineVertices[m_lineVertexCount].normal.w = colour.w;
+		// increases the amount of added vertices
+		m_lineVertexCount++;
 
-		if (true)
-		{
-			m_lineVertices[m_lineVertexCount].position.x = v0.x;
-			m_lineVertices[m_lineVertexCount].position.y = v0.y;
-			m_lineVertices[m_lineVertexCount].position.z = v0.z;
-			m_lineVertices[m_lineVertexCount].position.w = 1;
-			m_lineVertices[m_lineVertexCount].normal.x = colour.x;
-			m_lineVertices[m_lineVertexCount].normal.y = colour.y;
-			m_lineVertices[m_lineVertexCount].normal.z = colour.z;
-			m_lineVertices[m_lineVertexCount].normal.w = colour.w;
-			//m_lineIndices[m_lineIndexCount + 1] = m_lineVertexCount;
-			m_lineVertexCount++;
-		}
-		if (true)
-		{
-			m_lineVertices[m_lineVertexCount].position.x = v1.x;
-			m_lineVertices[m_lineVertexCount].position.y = v1.y;
-			m_lineVertices[m_lineVertexCount].position.z = v1.z;
-			m_lineVertices[m_lineVertexCount].position.w = 1;
-			m_lineVertices[m_lineVertexCount].normal.x = colour.x;
-			m_lineVertices[m_lineVertexCount].normal.y = colour.y;
-			m_lineVertices[m_lineVertexCount].normal.z = colour.z;
-			m_lineVertices[m_lineVertexCount].normal.w = colour.w;
-			//m_lineIndices[m_lineIndexCount + 2] = m_lineVertexCount;
-			m_lineVertexCount++;
-		}
-
-		//m_lineIndexCount += 3;
+		// adds vertex 1's properties to the array
+		m_lineVertices[m_lineVertexCount].position.x = v1.x;
+		m_lineVertices[m_lineVertexCount].position.y = v1.y;
+		m_lineVertices[m_lineVertexCount].position.z = v1.z;
+		m_lineVertices[m_lineVertexCount].position.w = 1;
+		m_lineVertices[m_lineVertexCount].normal.x = colour.x;
+		m_lineVertices[m_lineVertexCount].normal.y = colour.y;
+		m_lineVertices[m_lineVertexCount].normal.z = colour.z;
+		m_lineVertices[m_lineVertexCount].normal.w = colour.w;
+		// increases the amount of added vertices
+		m_lineVertexCount++;
 	}
 }
-
+// adds a tri from vertex 0 to vertex 1 to vertex 2 of the colour
 void Mesh::AddTri(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec3 & v2, const glm::vec4 & colour)
 {
+	// checks if the amount of tris exceed the maximum allowed amount
 	if (((float)m_triIndexCount / 3.0f) < m_maxTris)
 	{
+		// used to check if vertex 0, 1 or 2 exist in the array
 		bool exists[3] = { false, false, false };
+		// checks each added vertex in the array
 		for (int i = 0; i < m_triVertexCount; i++)
 		{
+			// checks if the vertex exists
 			if (glm::vec3(m_triVertices[i].position) == v0)
 			{
+				// sets the flag of the vertex to existing
 				exists[0] = true;
+				// uses the index of the original vertex
 				m_triIndices[m_triIndexCount] = i;
 			}
 			if (glm::vec3(m_triVertices[i].position) == v1)
@@ -152,8 +135,10 @@ void Mesh::AddTri(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec3 & 
 				m_triIndices[m_triIndexCount + 2] = i;
 			}
 		}
+		// checks if the vertex has not been added to the array yet
 		if (!exists[0])
 		{
+			// adds the vertex's properties to the array
 			m_triVertices[m_triVertexCount].position.x = v0.x;
 			m_triVertices[m_triVertexCount].position.y = v0.y;
 			m_triVertices[m_triVertexCount].position.z = v0.z;
@@ -162,6 +147,8 @@ void Mesh::AddTri(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec3 & 
 			m_triVertices[m_triVertexCount].normal.y = colour.y;
 			m_triVertices[m_triVertexCount].normal.z = colour.z;
 			m_triVertices[m_triVertexCount].normal.w = colour.w;
+			// adds the new index to the array
+			// does not increment the count until the end because it's easier to keep track of the current index amount
 			m_triIndices[m_triIndexCount] = m_triVertexCount;
 			m_triVertexCount++;
 		}
@@ -192,18 +179,25 @@ void Mesh::AddTri(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec3 & 
 			m_triVertexCount++;
 		}
 
+		// adds 3 counts of indices to the total
 		m_triIndexCount += 3;
 	}
 }
 
-void Mesh::AddQuad(const glm::vec3 & center, const glm::vec2 & extents,
-	const glm::vec4 & colour, const glm::mat4 * transform)
+// adds a coloured quad at the specified position with the specified half dimensions
+void Mesh::AddQuadColoured(const glm::vec3 & center, const glm::vec2 & extents,
+	const glm::vec4 & colour, const glm::mat4 * transform /* = nullptr */)
 {
+	// collection of the corners of the quad
 	glm::vec3 verts[4];
+	// center of the object that can be transformed
 	glm::vec3 tempCenter = center;
+	// the width as a vector along the x axis
 	glm::vec3 vX(extents.x, 0.0f, 0.0f);
+	// the height as a vector along the z axis
 	glm::vec3 vZ(0.0f, 0.0f, extents.y);
 
+	// transforms all the properties based on the provided transform
 	if (transform != nullptr)
 	{
 		vX = glm::vec3(*transform * glm::vec4(vX, 0.0f));
@@ -211,34 +205,69 @@ void Mesh::AddQuad(const glm::vec3 & center, const glm::vec2 & extents,
 		tempCenter = glm::vec3((*transform)[3]) + tempCenter;
 	}
 
+	// gets the position on either side of the center for both extents to get the verts
 	verts[0] = tempCenter - vX - vZ;
 	verts[1] = tempCenter - vX + vZ;
 	verts[2] = tempCenter + vX + vZ;
 	verts[3] = tempCenter + vX - vZ;
 
+	// adds to tris of the colour
 	AddTri(verts[0], verts[1], verts[2], colour);
 	AddTri(verts[2], verts[3], verts[0], colour);
+}
+// adds a textured quad at the specified position with the specified half dimensions
+void Mesh::AddQuadTextured(const glm::vec3 & center, const glm::vec2 & extents, const glm::mat4 * transform)
+{
+	// collection of the corners of the quad
+	glm::vec3 verts[4];
+	// center of the object that can be transformed
+	glm::vec3 tempCenter = center;
+	// the width as a vector along the x axis
+	glm::vec3 vX(extents.x, 0.0f, 0.0f);
+	// the height as a vector along the z axis
+	glm::vec3 vZ(0.0f, 0.0f, extents.y);
 
+	// transforms all the properties based on the provided transform
+	if (transform != nullptr)
+	{
+		vX = glm::vec3(*transform * glm::vec4(vX, 0.0f));
+		vZ = glm::vec3(*transform * glm::vec4(vZ, 0.0f));
+		tempCenter = glm::vec3((*transform)[3]) + tempCenter;
+	}
+
+	// gets the position on either side of the center for both extents to get the verts
+	verts[0] = tempCenter - vX - vZ;
+	verts[1] = tempCenter - vX + vZ;
+	verts[2] = tempCenter + vX + vZ;
+	verts[3] = tempCenter + vX - vZ;
+
+	// adds two tris with an upward normal
+	AddTri(verts[0], verts[1], verts[2], { 0, 1, 0, 0 });
+	AddTri(verts[2], verts[3], verts[0], { 0, 1, 0, 0 });
+
+	// sets the texture coordinate for each corner of the quad to a corner of the texture
 	m_triVertices[m_triVertexCount - 4].texCoord = { 0, 0 };
 	m_triVertices[m_triVertexCount - 3].texCoord = { 0, 1 };
 	m_triVertices[m_triVertexCount - 2].texCoord = { 1, 1 };
 	m_triVertices[m_triVertexCount - 1].texCoord = { 1, 0 };
-
-	m_triVertices[m_triVertexCount - 4].normal = { 0, 1, 0, 0 };
-	m_triVertices[m_triVertexCount - 3].normal = { 0, 1, 0, 0 };
-	m_triVertices[m_triVertexCount - 2].normal = { 0, 1, 0, 0 };
-	m_triVertices[m_triVertexCount - 1].normal = { 0, 1, 0, 0 };
 }
 
+// adds a coloured box at the specified position with the specified half dimensions
 void Mesh::AddBox(const glm::vec3& center, const glm::vec3& extents,
-	const glm::vec4& colour, const glm::mat4* transform)
+	const glm::vec4& colour, const glm::mat4* transform /* = nullptr */)
 {
+	// collection of the corners of the box
 	glm::vec3 verts[8];
+	// center of the box that can be transformed
 	glm::vec3 tempCenter = center;
+	// the width as a vector along the x axis
 	glm::vec3 vX(extents.x, 0.0f, 0.0f);
+	// the height as a vector along the y axis
 	glm::vec3 vY(0.0f, extents.y, 0.0f);
+	// the depth as a vector along the z axis
 	glm::vec3 vZ(0.0f, 0.0f, extents.z);
 
+	// transforms all the properties based on the provided transform
 	if (transform != nullptr)
 	{
 		vX = glm::vec3(*transform * glm::vec4(vX, 0.0f));
@@ -295,7 +324,7 @@ void Mesh::AddBox(const glm::vec3& center, const glm::vec3& extents,
 }
 
 void Mesh::AddCylinder(const glm::vec3 & center, const float radius, const float halfLength,
-	const unsigned int segments, const glm::vec4 & colour, const glm::mat4 * transform)
+	const unsigned int segments, const glm::vec4 & colour, const glm::mat4 * transform /* = nullptr */)
 {
 	glm::vec3 tempCenter = transform != nullptr ? glm::vec3((*transform)[3]) + center : center;
 
@@ -336,7 +365,7 @@ void Mesh::AddCylinder(const glm::vec3 & center, const float radius, const float
 }
 
 void Mesh::AddPyramid(const glm::vec3 & center, const float halfHeight, const float halfWidth,
-	const glm::vec4 & colour, const glm::mat4 * transform)
+	const glm::vec4 & colour, const glm::mat4 * transform /* = nullptr */)
 {
 	glm::vec3 verts[5];
 	glm::vec3 up(0.0f, halfHeight, 0.0f);
@@ -375,8 +404,8 @@ void Mesh::AddPyramid(const glm::vec3 & center, const float halfHeight, const fl
 	AddLine(verts[3], verts[4], white);
 }
 
-void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, const int columns, const glm::vec4 & colour,
-	const glm::mat4 * transform, const float longMin, const float longMax, const float latMin, const float latMax)
+void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, const int columns, const glm::vec4 & colour, const glm::mat4 * transform /* = nullptr */,
+	const float longMin /* = 0.0f */, const float longMax /* = 360.0f */, const float latMin /* = -90.0f */, const float latMax /* = 90.0f */)
 {
 	float inverseRadius = 1 / radius;
 
