@@ -2,58 +2,50 @@
 #version 410
 
 // outputs from the vertex shader
-in vec4 vPosition;
-in vec3 vNormal;
-in vec2 vTexCoord;
+in vec4 fragPosition;
+in vec3 fragNormal;
+in vec2 fragTexCoord;
 
-// material ambient
-uniform vec3 Ka;
-// material diffuse
-uniform vec3 Kd;
-// material specular
-uniform vec3 Ks;
-// material specular power
-uniform float specularPower;
-// light ambient
-uniform vec3 Ia;
-// light diffuse
-uniform vec3 Id;
-// light specular
-uniform vec3 Is;
-// direction of the light
-uniform vec3 lightDirection;
+uniform struct Light
+{
+	vec3 position;
+	vec3 intensities;
+	float attenuation;
+	vec3 ambientCoefficient;
+} light;
 
-// position of the camera in world space
+uniform sampler2D materialTex;
 uniform vec3 cameraPosition;
-
-// used to sample the diffuse property from the texture
-uniform sampler2D diffuseTexture;
-// used to sample the specular property from the texture
-uniform sampler2D specularTexture;
+uniform float materialShininess;
+uniform vec3 materialSpecularColour;
 
 // the colour of the pixel
-out vec4 FragColour;
+out vec4 finalColour;
 
 void main()
 {
-	// ensures that the normal and light direction vectors are normalised
-	vec3 N = normalize(vNormal);
-	vec3 L = normalize(lightDirection);
-	// clamps the lambert scalar between 0 and 1
-	float lambertTerm = max(0, min(1, dot(N, -L)));
+	vec3 normal = normalize(fragNormal);
+	vec4 surfaceColour = texture(materialTex, fragTexCoord);
+	vec3 surfaceToLight = normalize(light.position - vec3(fragPosition));
+	vec3 surfaceToCamera = normalize(cameraPosition - vec3(fragPosition));
 
-	// view vector
-	vec3 V = normalize(cameraPosition - vPosition.xyz);
-	// reflection vector
-	vec3 R = reflect(L, N);
-	// calculates specular term
-	float specularTerm = pow(max(0, dot(R, V)), specularPower);
+	vec3 ambient = light.ambientCoefficient * surfaceColour.rgb * light.intensities;
+	
+	float diffuseCoefficient = max(0.0f, dot(normal, surfaceToLight));
+	vec3 diffuse = diffuseCoefficient * surfaceColour.rgb * light.intensities;
+	
+	float specularCoefficient = 0.0f;
+	if (diffuseCoefficient > 0.0f)
+	{
+		specularCoefficient = pow(max(0.0f, dot(surfaceToCamera, reflect(-surfaceToLight, normal))), materialShininess);
+	}
+	vec3 specular = specularCoefficient * materialSpecularColour * light.intensities;
 
-	// calculate each light property
-	vec3 ambient = Ia * Ka;
-	vec3 diffuse = Id * Kd * texture(diffuseTexture, vTexCoord).rgb * lambertTerm;
-	vec3 specular = Is * Ks * texture(specularTexture, vTexCoord).rgb * specularTerm;
+	float distanceToLight = length(light.position - vec3(fragPosition));
+	float attenuation = 1.0f / (1.0f + light.attenuation * pow(distanceToLight, 2));
 
-	// combines the light properties and sends out the fragment colour
-	FragColour = vec4(ambient + diffuse + specular, 1);
+	vec3 linearColour = ambient + attenuation * (diffuse + specular);
+	vec3 gamma = vec3(1.0f/2.2f);
+
+	finalColour = vec4(pow(linearColour, gamma), surfaceColour.a);
 }

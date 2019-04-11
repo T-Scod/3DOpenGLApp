@@ -30,11 +30,19 @@ public:
 	void RunApp();
 
 protected:
-	struct Light
+	/*struct Light
 	{
 		glm::vec3 direction;
 		glm::vec3 diffuse;
 		glm::vec3 specular;
+	};*/
+
+	struct Light
+	{
+		glm::vec3 position;
+		glm::vec3 intensities;
+		float attenuation;
+		float ambientCoefficient;
 	};
 
 	Camera* m_camera;

@@ -39,20 +39,20 @@ bool RenderingApp::startup()
 	//	printf("Texture Shader Error: %s\n", m_spearShader.getLastError());
 	//	return false;
 	//}
-	//m_phongShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/phong.vert");
-	//m_phongShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/phong.frag");
-	//if (m_phongShader.link() == false)
-	//{
-	//	printf("Phong Shader Error!\n", m_phongShader.getLastError());
-	//	return false;
-	//}
-	m_normalShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/normalMap.vert");
-	m_normalShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/normalMap.frag");
-	if (m_normalShader.link() == false)
+	m_phongShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/phong.vert");
+	m_phongShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/phong.frag");
+	if (m_phongShader.link() == false)
 	{
-		printf("Normal Shader Error!\n", m_normalShader.getLastError());
+		printf("Phong Shader Error!\n", m_phongShader.getLastError());
 		return false;
 	}
+	//m_normalShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/normalMap.vert");
+	//m_normalShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/normalMap.frag");
+	//if (m_normalShader.link() == false)
+	//{
+	//	printf("Normal Shader Error!\n", m_normalShader.getLastError());
+	//	return false;
+	//}
 
 	//m_transform = new glm::mat4({ 10, 0, 0, 0,
 	//							  0, 10, 0, 0,
@@ -92,9 +92,12 @@ bool RenderingApp::startup()
 						 0.0f, 0.0f, 2.0f, 0.0f,
 						 1.0f, 0.0f, 0.0f, 1.0f };
 
-	m_light.diffuse = { 1.0f, 1.0f, 0.0f };
-	m_light.specular = { 1.0f, 1.0f, 0.0f };
-	m_ambientLight = { 0.25f, 0.25f, 0.25f };
+	//m_light.diffuse = { 1.0f, 1.0f, 0.0f };
+	//m_light.specular = { 1.0f, 1.0f, 0.0f };
+	//m_ambientLight = { 0.25f, 0.25f, 0.25f };
+
+	m_light.position = glm::vec3(m_camera->GetModel()[3]);
+	m_light.intensities = glm::vec3(1.0f);
 
 	return true;
 }
@@ -117,8 +120,26 @@ void RenderingApp::update(float deltaTime)
 
 	m_camera->Update(deltaTime);
 
-	float time = getTime();
-	m_light.direction = glm::normalize(glm::vec3(glm::cos(time * 2.0f), glm::sin(time * 2.0f), 0.0f));
+	//float time = getTime();
+	//m_light.direction = glm::normalize(glm::vec3(glm::cos(time * 2.0f), glm::sin(time * 2.0f), 0.0f));
+
+	if (glfwGetKey(m_window, '1'))
+	{
+		m_light.position = glm::vec3(m_camera->GetModel()[3]);
+	}
+
+	if (glfwGetKey(m_window, '2'))
+	{
+		m_light.intensities = glm::vec3(1.0f, 0.0f, 0.0f); // red
+	}
+	else if (glfwGetKey(m_window, '3'))
+	{
+		m_light.intensities = glm::vec3(0.0f, 1.0f, 0.0f); // green
+	}
+	else if (glfwGetKey(m_window, '4'))
+	{
+		m_light.intensities = glm::vec3(1.0f, 1.0f, 1.0f); // white
+	}
 }
 void RenderingApp::draw()
 {
@@ -145,15 +166,18 @@ void RenderingApp::draw()
 
 	//m_spearShader.bind();
 	//m_spearShader.bindUniform("ProjectionViewModel", pvm);
-	m_normalShader.bind();
-	m_normalShader.bindUniform("Ia", m_ambientLight);
-	m_normalShader.bindUniform("Id", m_light.diffuse);
-	m_normalShader.bindUniform("Is", m_light.specular);
-	m_normalShader.bindUniform("lightDirection", m_light.direction);
-	m_normalShader.bindUniform("ProjectionViewModel", pvm * m_spearTransform);
-	m_normalShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(m_spearTransform)));
-	m_normalShader.bindUniform("ModelMatrix", m_camera->GetModel());
-	m_normalShader.bindUniform("cameraPosition", glm::vec3(m_camera->GetModel()[3]));
+	//m_normalShader.bind();
+	//m_normalShader.bindUniform("Ia", m_ambientLight);
+	//m_normalShader.bindUniform("Id", m_light.diffuse);
+	//m_normalShader.bindUniform("Is", m_light.specular);
+	//m_normalShader.bindUniform("lightDirection", m_light.direction);
+	//m_normalShader.bindUniform("ProjectionViewModel", pvm * m_spearTransform);
+	//m_normalShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(m_spearTransform)));
+	//m_normalShader.bindUniform("ModelMatrix", m_camera->GetModel());
+	//m_normalShader.bindUniform("cameraPosition", glm::vec3(m_camera->GetModel()[3]));
+	m_phongShader.bind();
+	m_phongShader.bindUniform("light.position", m_light.position);
+	m_phongShader.bindUniform("light.intensities", m_light.intensities);
 	m_spearMesh.draw();
 
 	//m_textureShader.bind();

@@ -2,21 +2,21 @@
 #version 410
 
 // position of the vertex
-layout(location = 0) in vec4 Position;
+layout(location = 0) in vec4 vertPosition;
 // normal of the vertex (used for lighting)
-layout(location = 1) in vec4 Normal;
+layout(location = 1) in vec4 vertNormal;
 // the corresponding coordinate on a texture
-layout(location = 2) in vec2 TexCoord;
+layout(location = 2) in vec2 vertTexCoord;
 // tangent to the normal (points in the direction of the X axis)
-layout(location = 3) in vec4 Tangent;
+layout(location = 3) in vec4 vertTangent;
 
 // passes the data onto the fragment shader
-out vec4 vPosition;
-out vec3 vNormal;
-out vec2 vTexCoord;
-out vec3 vTangent;
+out vec4 fragPosition;
+out vec3 fragNormal;
+out vec2 fragTexCoord;
+out vec3 fragTangent;
 // points in the Y direction of the texture
-out vec3 vBiTangent;
+out vec3 fragBiTangent;
 
 // used to move local-space vertices into clip space
 uniform mat4 ProjectionViewModel;
@@ -28,15 +28,15 @@ uniform mat3 NormalMatrix;
 void main()
 {
 	// stores the clip space position in the GLSL position constant
-	gl_Position = ProjectionViewModel * Position;
+	gl_Position = ProjectionViewModel * vertPosition;
 	// transforms the position into world space before passing it to the fragment shader
-	vPosition = ModelMatrix * Position;
+	fragPosition = ModelMatrix * vertPosition;
 	// transforms the normal
-	vNormal = NormalMatrix * Normal.xyz;
+	fragNormal = NormalMatrix * vertNormal.xyz;
 	// outputs the given texture coordinate
-	vTexCoord = TexCoord;
+	fragTexCoord = vertTexCoord;
 	// transforms the tangent
-	vTangent = NormalMatrix * Tangent.xyz;
+	fragTangent = NormalMatrix * vertTangent.xyz;
 	// gets the BiTangent from the cross product between the normal and tangent (Y = cross(Z, X))
-	vBiTangent = cross(vNormal, vTangent) * Tangent.w;
+	fragBiTangent = cross(fragNormal, fragTangent) * vertTangent.w;
 }

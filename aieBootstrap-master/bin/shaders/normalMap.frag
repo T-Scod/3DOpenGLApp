@@ -2,11 +2,18 @@
 #version 410
 
 // outputs from the vertex shader
-in vec4 vPosition;
-in vec3 vNormal;
-in vec2 vTexCoord;
-in vec3 vTangent;
-in vec3 vBiTangent;
+in vec4 fragPosition;
+in vec3 fragNormal;
+in vec2 fragTexCoord;
+in vec3 fragTangent;
+in vec3 fragBiTangent;
+
+#define MAX_LIGHTS 10
+uniform struct Light
+{
+	vec3 position;
+	vec3 intensities;
+} allLights[MAX_LIGHTS];
 
 // material ambient
 uniform vec3 Ka;
@@ -41,16 +48,16 @@ out vec4 FragColour;
 void main()
 {
 	// ensures that the vectors are normalised
-	vec3 N = normalize(vNormal);
-	vec3 T = normalize(vTangent);
-	vec3 B = normalize(vBiTangent);
+	vec3 N = normalize(fragNormal);
+	vec3 T = normalize(fragTangent);
+	vec3 B = normalize(fragBiTangent);
 	// tangent basis matrix
 	mat3 TBN = mat3(T, B, N);
 
 	// gets the property at the specified coordinate
-	vec3 texDiffuse = texture(diffuseTexture, vTexCoord).rgb;
-	vec3 texSpecular = texture(specularTexture, vTexCoord).rgb;
-	vec3 texNormal = texture(normalTexture, vTexCoord).rgb;
+	vec3 texDiffuse = texture(diffuseTexture, fragTexCoord).rgb;
+	vec3 texSpecular = texture(specularTexture, fragTexCoord).rgb;
+	vec3 texNormal = texture(normalTexture, fragTexCoord).rgb;
 
 	// transforms the normal out of a 0 to 1 range into a -1 to 1 range
 	N = TBN * (texNormal * 2 - 1);
@@ -60,7 +67,7 @@ void main()
 	float lambertTerm = max(0, min(1, dot(N, -L)));
 
 	// view vector
-	vec3 V = normalize(cameraPosition - vPosition.xyz);
+	vec3 V = normalize(cameraPosition - fragPosition.xyz);
 	// reflection vector
 	vec3 R = reflect(L, N);
 	// calculates specular term
