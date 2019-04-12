@@ -8,6 +8,7 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "OBJMesh.h"
+#include <sstream>
 
 class RenderingApp : public aie::Application
 {
@@ -28,6 +29,15 @@ public:
 	virtual void draw();
 
 	void RunApp();
+	template <typename T>
+	void SetLightUniform(aie::ShaderProgram shader, const char* propertyName, size_t lightIndex, const T& value)
+	{
+		std::ostringstream ss;
+		ss << "allLights[" << lightIndex << "]." << propertyName;
+		std::string uniformName = ss.str();
+
+		shader.bindUniform(uniformName.c_str(), value);
+	}
 
 protected:
 	/*struct Light
@@ -43,6 +53,8 @@ protected:
 		glm::vec3 intensities;
 		float attenuation;
 		float ambientCoefficient;
+		float coneAngle;
+		glm::vec3 coneDirection;
 	};
 
 	Camera* m_camera;
@@ -65,5 +77,6 @@ protected:
 	glm::mat4 m_spearTransform;
 
 	Light m_light;
+	std::vector<Light> m_lights;
 	glm::vec3 m_ambientLight;
 };

@@ -9,10 +9,15 @@ in vec3 fragTangent;
 in vec3 fragBiTangent;
 
 #define MAX_LIGHTS 10
-uniform struct Light
-{
-	vec3 position;
-	vec3 intensities;
+uniform int numLights;
+uniform struct Light {
+   vec4 position;
+   //a.k.a the color of the light
+   vec3 intensities;
+   float attenuation;
+   float ambientCoefficient;
+   float coneAngle;
+   vec3 coneDirection;
 } allLights[MAX_LIGHTS];
 
 // material ambient
@@ -23,14 +28,6 @@ uniform vec3 Kd;
 uniform vec3 Ks;
 // material specular power
 uniform float specularPower;
-// light ambient
-uniform vec3 Ia;
-// light diffuse
-uniform vec3 Id;
-// light specular
-uniform vec3 Is;
-// direction of the light
-uniform vec3 lightDirection;
 
 // position of the camera in world space
 uniform vec3 cameraPosition;
@@ -43,41 +40,81 @@ uniform sampler2D specularTexture;
 uniform sampler2D normalTexture;
 
 // the colour of the pixel
-out vec4 FragColour;
+out vec4 finalColour;
+
+vec3 ApplyLight(Light light, vec3 diffuseColor, vec3 specularColour, vec3 normal, vec3 surfacePos, vec3 surfaceToCamera)
+{
+    vec3 surfaceToLight;
+    float attenuation = 1.0f;
+    if (light.position.w == 0.0f)
+	{
+        //directional light
+        surfaceToLight = normalize(light.position.xyz);
+		//no attenuation for directional lights
+        attenuation = 1.0f;
+    }
+	else
+	{
+        //point light
+        surfaceToLight = normalize(light.position.xyz - surfacePos);
+        float distanceToLight = length(light.position.xyz - surfacePos);
+        attenuation = 1.0f / (1.0f + light.attenuation * pow(distanceToLight, 2));
+
+        //cone restrictions (affects attenuation)
+        float lightToSurfaceAngle = degrees(acos(dot(-surfaceToLight, normalize(light.coneDirection))));
+        if(lightToSurfaceAngle > light.coneAngle)
+		{
+            attenuation = 0.0f;
+        }
+    }
+
+    //ambient
+    vec3 ambient = Ka * light.ambientCoefficient * diffuseColor.rgb * light.intensities;
+
+    //diffuse
+    float diffuseCoefficient = max(0.0f, dot(normal, surfaceToLight));
+    vec3 diffuse = Kd * diffuseCoefficient * diffuseColor.rgb * light.intensities;
+    
+    //specular
+    float specularCoefficient = 0.0f;
+    if(diffuseCoefficient > 0.0f)
+	{
+        specularCoefficient = pow(max(0.0f, dot(surfaceToCamera, reflect(-surfaceToLight, normal))), specularPower);
+	}
+    vec3 specular = Ks * specularCoefficient * specularColour * light.intensities;
+
+    //linear color (color before gamma correction)
+    return ambient + attenuation * (diffuse + specular);
+}
 
 void main()
 {
 	// ensures that the vectors are normalised
-	vec3 N = normalize(fragNormal);
-	vec3 T = normalize(fragTangent);
-	vec3 B = normalize(fragBiTangent);
+	vec3 normal = normalize(fragNormal);
+	vec3 tangent = normalize(fragTangent);
+	vec3 biTangent = normalize(fragBiTangent);
 	// tangent basis matrix
-	mat3 TBN = mat3(T, B, N);
+	mat3 TBN = mat3(tangent, biTangent, normal);
 
 	// gets the property at the specified coordinate
-	vec3 texDiffuse = texture(diffuseTexture, fragTexCoord).rgb;
+	// surface colour
+	vec4 texDiffuse = texture(diffuseTexture, fragTexCoord).rgba;
+	// material specular colour
 	vec3 texSpecular = texture(specularTexture, fragTexCoord).rgb;
 	vec3 texNormal = texture(normalTexture, fragTexCoord).rgb;
 
 	// transforms the normal out of a 0 to 1 range into a -1 to 1 range
-	N = TBN * (texNormal * 2 - 1);
-	// normalised light direction
-	vec3 L = normalize(lightDirection);
-	// clamps the lambert scalar between 0 and 1
-	float lambertTerm = max(0, min(1, dot(N, -L)));
+	normal = TBN * (texNormal * 2 - 1);
+	vec3 surfacePos = vec3(fragPosition);
+	vec3 surfaceToCamera = normalize(cameraPosition - surfacePos);
 
-	// view vector
-	vec3 V = normalize(cameraPosition - fragPosition.xyz);
-	// reflection vector
-	vec3 R = reflect(L, N);
-	// calculates specular term
-	float specularTerm = pow(max(0, dot(R, V)), specularPower);
+	vec3 linearColour = vec3(0);
+	for (int i = 0; i < numLights; i++)
+	{
+		linearColour += ApplyLight(allLights[i], texDiffuse.rgb, texSpecular.rgb, normal, surfacePos, surfaceToCamera);
+	}
 
-	// calculate each light property
-	vec3 ambient = Ia * Ka;
-	vec3 diffuse = Id * Kd * texDiffuse * lambertTerm;
-	vec3 specular = Is * Ks * texSpecular * specularTerm;
-
-	// combines the light properties and sends out the fragment colour
-	FragColour = vec4(ambient + diffuse + specular, 1);
+	// final colour after gamma correction
+	vec3 gamma = vec3(1.0f / 2.2f);
+	finalColour = vec4(pow(linearColour, gamma), texDiffuse.a);
 }
