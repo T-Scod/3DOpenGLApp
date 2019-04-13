@@ -39,20 +39,20 @@ bool RenderingApp::startup()
 	//	printf("Texture Shader Error: %s\n", m_spearShader.getLastError());
 	//	return false;
 	//}
-	/*m_phongShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/phong.vert");
+	m_phongShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/phong.vert");
 	m_phongShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/phong.frag");
 	if (m_phongShader.link() == false)
 	{
 		printf("Phong Shader Error!\n", m_phongShader.getLastError());
 		return false;
-	}*/
-	m_normalShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/normalMap.vert");
-	m_normalShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/normalMap.frag");
-	if (m_normalShader.link() == false)
-	{
-		printf("Normal Shader Error!\n", m_normalShader.getLastError());
-		return false;
 	}
+	//m_normalShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/normalMap.vert");
+	//m_normalShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/normalMap.frag");
+	//if (m_normalShader.link() == false)
+	//{
+	//	printf("Normal Shader Error!\n", m_normalShader.getLastError());
+	//	return false;
+	//}
 
 	//m_transform = new glm::mat4({ 10, 0, 0, 0,
 	//							  0, 10, 0, 0,
@@ -96,22 +96,23 @@ bool RenderingApp::startup()
 	//m_light.specular = { 1.0f, 1.0f, 0.0f };
 	//m_ambientLight = { 0.25f, 0.25f, 0.25f };
 
-	m_light.position = glm::vec3(m_camera->GetModel()[3]);
-	m_light.intensities = glm::vec3(1.0f);
+	//m_light.position = glm::vec3(m_camera->GetModel()[3]);
+	//m_light.intensities = glm::vec3(1.0f);
 
-	Light spotLight;
-	spotLight.position = glm::vec4(-4.0f, 0.0f, 10.0f, 1.0f);
-	spotLight.intensities = glm::vec3(2.0f, 2.0f, 2.0f);
-	spotLight.attenuation = 0.1f;
-	spotLight.ambientCoefficient = 0.0f;
-	spotLight.coneAngle = 15.0f;
-	spotLight.coneDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+	Light pointLight;
+	pointLight.position = glm::vec4(-4.0f, 0.0f, 10.0f, 1.0f);
+	pointLight.Ia = glm::vec3(0.25f);
+	pointLight.Id = glm::vec3(0.0f, 1.0f, 1.0f);
+	pointLight.Is = glm::vec3(0.0f, 1.0f, 1.0f);
+	pointLight.attenuation = 0.0f;
 	Light directionalLight;
 	directionalLight.position = glm::vec4(1.0f, 0.8f, 0.6f, 0.0f);
-	directionalLight.intensities = glm::vec3(0.4f, 0.3f, 0.1f);
-	directionalLight.ambientCoefficient = 0.06f;
+	directionalLight.Ia = glm::vec3(0.25f);
+	directionalLight.Id = glm::vec3(1.0f, 1.0f, 0.0f);
+	directionalLight.Is = glm::vec3(1.0f, 1.0f, 0.0f);
+	directionalLight.attenuation = 1.0f;
 
-	m_lights.push_back(spotLight);
+	m_lights.push_back(pointLight);
 	m_lights.push_back(directionalLight);
 
 	return true;
@@ -135,26 +136,26 @@ void RenderingApp::update(float deltaTime)
 
 	m_camera->Update(deltaTime);
 
-	//float time = getTime();
-	//m_light.direction = glm::normalize(glm::vec3(glm::cos(time * 2.0f), glm::sin(time * 2.0f), 0.0f));
+	float time = getTime();
+	m_lights[1].position = glm::vec4(glm::normalize(glm::vec3(glm::cos(time * 2.0f), glm::sin(time * 2.0f), 0.0f)), 0);
 
-	if (glfwGetKey(m_window, '1'))
-	{
-		m_light.position = glm::vec3(m_camera->GetModel()[3]);
-	}
+	//if (glfwGetKey(m_window, '1'))
+	//{
+	//	m_light.position = glm::vec3(m_camera->GetModel()[3]);
+	//}
 
-	if (glfwGetKey(m_window, '2'))
-	{
-		m_light.intensities = glm::vec3(1.0f, 0.0f, 0.0f); // red
-	}
-	else if (glfwGetKey(m_window, '3'))
-	{
-		m_light.intensities = glm::vec3(0.0f, 1.0f, 0.0f); // green
-	}
-	else if (glfwGetKey(m_window, '4'))
-	{
-		m_light.intensities = glm::vec3(1.0f, 1.0f, 1.0f); // white
-	}
+	//if (glfwGetKey(m_window, '2'))
+	//{
+	//	m_light.intensities = glm::vec3(1.0f, 0.0f, 0.0f); // red
+	//}
+	//else if (glfwGetKey(m_window, '3'))
+	//{
+	//	m_light.intensities = glm::vec3(0.0f, 1.0f, 0.0f); // green
+	//}
+	//else if (glfwGetKey(m_window, '4'))
+	//{
+	//	m_light.intensities = glm::vec3(1.0f, 1.0f, 1.0f); // white
+	//}
 }
 void RenderingApp::draw()
 {
@@ -181,21 +182,20 @@ void RenderingApp::draw()
 
 	//m_spearShader.bind();
 	//m_spearShader.bindUniform("ProjectionViewModel", pvm);
-	m_normalShader.bind();
-	m_normalShader.bindUniform("ProjectionViewModel", pvm * m_spearTransform);
-	m_normalShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(m_spearTransform)));
-	m_normalShader.bindUniform("ModelMatrix", m_camera->GetModel());
-	m_normalShader.bindUniform("cameraPosition", glm::vec3(m_camera->GetModel()[3]));
-	m_normalShader.bindUniform("numLights", (int)m_lights.size());
+	m_phongShader.bind();
+	m_phongShader.bindUniform("ProjectionViewModel", pvm * m_spearTransform);
+	m_phongShader.bindUniform("ModelMatrix", m_camera->GetModel());
+	m_phongShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(m_spearTransform)));
+	m_phongShader.bindUniform("numLights", (int)m_lights.size());
+	m_phongShader.bindUniform("cameraPosition", glm::vec3(m_camera->GetModel()[3]));
 
 	for (size_t i = 0; i < m_lights.size(); i++)
 	{
-		SetLightUniform(m_normalShader, "position", i, m_lights[i].position);
-		SetLightUniform(m_normalShader, "intensities", i, m_lights[i].intensities);
-		SetLightUniform(m_normalShader, "attenuation", i, m_lights[i].attenuation);
-		SetLightUniform(m_normalShader, "ambientCoefficient", i, m_lights[i].ambientCoefficient);
-		SetLightUniform(m_normalShader, "coneAngle", i, m_lights[i].coneAngle);
-		SetLightUniform(m_normalShader, "coneDirection", i, m_lights[i].coneDirection);
+		SetLightUniform(&m_phongShader, "position", i, m_lights[i].position);
+		SetLightUniform(&m_phongShader, "Ia", i, m_lights[i].Ia);
+		SetLightUniform(&m_phongShader, "Id", i, m_lights[i].Id);
+		SetLightUniform(&m_phongShader, "Is", i, m_lights[i].Is);
+		SetLightUniform(&m_phongShader, "attenuation", i, m_lights[i].attenuation);
 	}
 
 	//m_phongShader.bind();

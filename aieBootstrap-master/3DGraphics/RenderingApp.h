@@ -30,13 +30,13 @@ public:
 
 	void RunApp();
 	template <typename T>
-	void SetLightUniform(aie::ShaderProgram shader, const char* propertyName, size_t lightIndex, const T& value)
+	void SetLightUniform(aie::ShaderProgram* shader, const char* propertyName, size_t lightIndex, const T& value)
 	{
 		std::ostringstream ss;
 		ss << "allLights[" << lightIndex << "]." << propertyName;
 		std::string uniformName = ss.str();
 
-		shader.bindUniform(uniformName.c_str(), value);
+		shader->bindUniform(uniformName.c_str(), value);
 	}
 
 protected:
@@ -49,12 +49,11 @@ protected:
 
 	struct Light
 	{
-		glm::vec3 position;
-		glm::vec3 intensities;
+		glm::vec4 position;
+		glm::vec3 Ia;
+		glm::vec3 Id;
+		glm::vec3 Is;
 		float attenuation;
-		float ambientCoefficient;
-		float coneAngle;
-		glm::vec3 coneDirection;
 	};
 
 	Camera* m_camera;
@@ -62,7 +61,7 @@ protected:
 	//aie::ShaderProgram m_textureShader;
 	//aie::ShaderProgram m_spearShader;
 	aie::ShaderProgram m_phongShader;
-	aie::ShaderProgram m_normalShader;
+	//aie::ShaderProgram m_normalShader;
 
 	//Mesh* m_mesh;
 	//glm::mat4* m_transform;
@@ -76,7 +75,7 @@ protected:
 	aie::OBJMesh m_spearMesh;
 	glm::mat4 m_spearTransform;
 
-	Light m_light;
+	//Light m_light;
 	std::vector<Light> m_lights;
-	glm::vec3 m_ambientLight;
+	//glm::vec3 m_ambientLight;
 };

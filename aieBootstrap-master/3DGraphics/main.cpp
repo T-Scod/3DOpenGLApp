@@ -1,9 +1,9 @@
-#include "RenderingApp.h"
+#include "App3D.h"
 #include <GLFW/glfw3.h>
 
 int main()
 {
-	RenderingApp* app = new RenderingApp();
+	App3D* app = new App3D();
 	app->RunApp();
 
 	delete app;
