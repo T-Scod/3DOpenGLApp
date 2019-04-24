@@ -1,3 +1,7 @@
+/*
+	\file App3D.cpp
+	\brief A file of definitions for an application class.
+*/
 #include "App3D.h"
 #include <gl_core_4_4.h>
 #include <GLFW/glfw3.h>
@@ -5,6 +9,12 @@
 #include <Gizmos.h>
 #include <glm/gtx/transform.hpp>
 
+/*
+	\fn App3D()
+	\brief Default constructor.
+	\fn ~App3D()
+	\brief Default destructor.
+*/
 App3D::App3D()
 {
 }
@@ -12,34 +22,47 @@ App3D::~App3D()
 {
 }
 
+/*
+	\fn bool startup()
+	\brief Loads all the shaders and models as well as initialising the light sources.
+	\brief This function is called only once before the start of the game loop.
+	\brief Additionally, the function creates 2 light sources and adds them to the collection of lights.
+	\return Returns false if something was not loaded properly.
+*/
 bool App3D::startup()
 {
+	// creates a new camera at location (10, 10, 10) that is looking towards the origin
 	m_camera = new Camera();
 	m_camera->LookAt(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	m_camera->Perspective(glm::pi<float>() * 0.25f, 1280.0f / 720.0f, 0.1f, 100.0f);
 
-	// loads the shaders
+	// loads the phong shader from the bin folder and attempts to link it
 	m_phongShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/phong.vert");
 	m_phongShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/phong.frag");
 	if (m_phongShader.link() == false)
 	{
+		// prints an error if the shader failed to load
 		printf("Phong Shader Error!\n", m_phongShader.getLastError());
 		return false;
 	}
+	// loads the simple shader from the bin folder and attempts to link it
 	m_simpleShader.loadShader(aie::eShaderStage::VERTEX, "../bin/shaders/simpleColour.vert");
 	m_simpleShader.loadShader(aie::eShaderStage::FRAGMENT, "../bin/shaders/simpleColour.frag");
 	if (m_simpleShader.link() == false)
 	{
+		// prints an error if the shader failed to load
 		printf("Colour Shader Error!\n", m_simpleShader.getLastError());
 		return false;
 	}
 
-	// loads the spear mesh with textures
+	// attempts to load the spear mesh with textures
 	if (m_spearMesh.load("../bin/soulspear/soulspear.obj", true, true) == false)
 	{
+		// prints an error if it failed to load
 		printf("Soulspear Mesh Error!\n");
 		return false;
 	}
+	// initialises the transform of the spear to have a scale of 200%
 	m_spearTransform = { 2.0f, 0.0f, 0.0f, 0.0f,
 						 0.0f, 2.0f, 0.0f, 0.0f,
 						 0.0f, 0.0f, 2.0f, 0.0f,
@@ -69,6 +92,10 @@ bool App3D::startup()
 
 	return true;
 }
+/*
+	\fn void shutdown()
+	\brief Deallocates all pointers.
+*/
 void App3D::shutdown()
 {
 	delete m_camera;
@@ -77,6 +104,11 @@ void App3D::shutdown()
 	m_mesh = nullptr;
 }
 
+/*
+	\fn void update(float deltaTime)
+	\brief Updates the camera each frame.
+	\param deltaTime The time between each frame.
+*/
 void App3D::update(float deltaTime)
 {
 	if (glfwWindowShouldClose(m_window) == true || glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -90,6 +122,10 @@ void App3D::update(float deltaTime)
 	float time = getTime();
 	m_lights[1].position = glm::vec4(glm::normalize(glm::vec3(glm::cos(time * 2.0f), glm::sin(time * 2.0f), 0.0f)), 0);
 }
+/*
+	/fn void draw()
+	/brief Draws all objects.
+*/
 void App3D::draw()
 {
 	aie::Gizmos::addTransform(glm::mat4(1.0f));
@@ -139,6 +175,10 @@ void App3D::draw()
 	aie::Gizmos::draw(m_camera->GetProjectionView());
 }
 
+/*
+	\fn RunApp()
+	\brief Sets up the window and starts the game loop.
+*/
 void App3D::RunApp()
 {
 	// initialises
