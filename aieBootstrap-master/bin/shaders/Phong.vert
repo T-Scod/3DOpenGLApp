@@ -1,28 +1,52 @@
-// a normal map vertex shader
+/*
+	\file phong.vert
+	\brief A normal map vertex shader.
+*/
 #version 410
 
-// position of the vertex
+/*
+	\var vec4 vertPosition
+	Position of the vertex being passed in by the vertex array.
+	\var vec4 vertNormal
+	Normal of the vertex being passed in by the vertex array.
+	\var vec2 vertTexCoord
+	Texture coordinate of the vertex being passed in by the vertex array.
+	\var vec4 vertTangent
+	Tangent (along the x axis,) to the normal of the vertex being passed in by the vertex array.
+*/
 layout(location = 0) in vec4 vertPosition;
-// normal of the vertex (used for lighting)
 layout(location = 1) in vec4 vertNormal;
-// the corresponding coordinate on a texture
 layout(location = 2) in vec2 vertTexCoord;
-// tangent to the normal (points in the direction of the X axis)
 layout(location = 3) in vec4 vertTangent;
 
-// passes the data onto the fragment shader
+/*
+	\var vec4 fragPosition
+	Position of the vertex in world space.
+	\var vec3 fragNormal
+	Normal of the vertex in world space.
+	\var vec2 fragTexCoord
+	Texture coordinate of the vertex that is passed to the fragment shader.
+	\var vec3 fragTangent
+	Tangent of the vertex in world space.
+	\var vec3 fragBiTangent
+	Tangent (along the y axis,) to the normal of the vertex in world space.
+*/
 out vec4 fragPosition;
 out vec3 fragNormal;
 out vec2 fragTexCoord;
 out vec3 fragTangent;
-// points in the Y direction of the texture
 out vec3 fragBiTangent;
 
-// used to move local-space vertices into clip space
+/*
+	\var mat4 ProjectionViewModel
+	Used to move local-space vertices into clip space.
+	\var mat4 ModelMatrix
+	Used to move local-space vertices into world space.
+	\var mat3 NormalMatrix
+	Used to transform the normal.
+*/
 uniform mat4 ProjectionViewModel;
-// used to move local-space vertices into world space
 uniform mat4 ModelMatrix;
-// used to transform the normal
 uniform mat3 NormalMatrix;
 
 void main()

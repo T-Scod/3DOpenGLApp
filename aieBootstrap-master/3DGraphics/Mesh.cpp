@@ -1,7 +1,14 @@
+/*
+	\file Mesh.cpp
+	\brief A file of definitions for a mesh class
+*/
 #include "Mesh.h"
 #include <gl_core_4_4.h>
 
-// dedicates space for the mesh based on the maximum amount of tris and lines
+/*
+	\fn Mesh(const unsigned int maxTris, const unsigned int maxLines)
+	\brief Dedicates space for the mesh based on the maximum amount of tris and lines.
+*/
 Mesh::Mesh(const unsigned int maxTris, const unsigned int maxlines) :
 	m_triIndexCount(0), m_triVertexCount(0), m_triVAO(0), m_triVBO(0), m_triIBO(0),
 	m_lineVertexCount(0), m_lineVAO(0), m_lineVBO(0)
@@ -19,11 +26,11 @@ Mesh::Mesh(const unsigned int maxTris, const unsigned int maxlines) :
 	glGenVertexArrays(1, &m_triVAO);
 	glBindVertexArray(m_triVAO);
 
-	// generate vertex buffer, bind it and fill it
+	// generate tri vertex buffer, bind it and fill it
 	glGenBuffers(1, &m_triVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_triVBO);
 	glBufferData(GL_ARRAY_BUFFER, m_maxTris * 3 * sizeof(Vertex), m_triVertices, GL_DYNAMIC_DRAW);
-	// generate index buffer, bind it and fill it
+	// generate tri index buffer, bind it and fill it
 	glGenBuffers(1, &m_triIBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_triIBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_maxTris * 3 * sizeof(unsigned int), m_triIndices, GL_DYNAMIC_DRAW);
@@ -41,7 +48,7 @@ Mesh::Mesh(const unsigned int maxTris, const unsigned int maxlines) :
 	glGenVertexArrays(1, &m_lineVAO);
 	glBindVertexArray(m_lineVAO);
 
-	// generate vertex buffer, bind it and fill it
+	// generate line vertex buffer, bind it and fill it
 	glGenBuffers(1, &m_lineVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_lineVBO);
 	glBufferData(GL_ARRAY_BUFFER, m_maxLines * 2 * sizeof(Vertex), m_lineVertices, GL_DYNAMIC_DRAW);
@@ -58,6 +65,10 @@ Mesh::Mesh(const unsigned int maxTris, const unsigned int maxlines) :
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+/*
+	\fn ~Mesh()
+	\brief Default destructor.
+*/
 Mesh::~Mesh()
 {
 	// dealocate containers
@@ -74,7 +85,13 @@ Mesh::~Mesh()
 	glDeleteVertexArrays(1, &m_lineVAO);
 }
 
-// adds a line from vertex 0 to vertex 1 of the colour
+/*
+	\fn void AddLine(const glm::vec3& v0, const glm::vec3& v1, const glm::vec4& colour)
+	\brief Adds a line between v0 and v1 of the colour to the line buffers.
+	\param v0 The start of the line.
+	\param v1 The end of the line.
+	\param colour The colour of the line.
+*/
 void Mesh::AddLine(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec4 & colour)
 {
 	// checks if the amount of lines exceed the maximum allowed amount
@@ -105,7 +122,14 @@ void Mesh::AddLine(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec4 &
 		m_lineVertexCount++;
 	}
 }
-// adds a tri from vertex 0 to vertex 1 to vertex 2 of the colour
+/*
+	\fn void AddTri(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec4& colour)
+	\brief Adds a triangle between v0, v1 and v2 of the colour to the tri buffers.
+	\param v0 The first vertex of the triangle.
+	\param v1 The second vertex of the triangle.
+	\param v2 The third vertex of the triangle.
+	\param colour The colour of the triangle.
+*/
 void Mesh::AddTri(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec3 & v2, const glm::vec4 & colour)
 {
 	// checks if the amount of tris exceed the maximum allowed amount
@@ -184,7 +208,15 @@ void Mesh::AddTri(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec3 & 
 	}
 }
 
-// adds a coloured quad at the specified position with the specified half dimensions
+/*
+	\fn void AddQuadColoured(const glm::vec3& center, const glm::vec2& extents, const glm::vec4& colour, const glm::mat4* transform = nullptr)
+	\brief Adds a coloured quad to the mesh.
+	\brief Calculates the vertices by adding the extents to the center.
+	\param center The center of the quad.
+	\param extents The extents of the quad.
+	\param colour The colour of the quad.
+	\param transform The optional transform of the quad.
+*/
 void Mesh::AddQuadColoured(const glm::vec3 & center, const glm::vec2 & extents,
 	const glm::vec4 & colour, const glm::mat4 * transform /* = nullptr */)
 {
@@ -215,7 +247,14 @@ void Mesh::AddQuadColoured(const glm::vec3 & center, const glm::vec2 & extents,
 	AddTri(verts[0], verts[1], verts[2], colour);
 	AddTri(verts[2], verts[3], verts[0], colour);
 }
-// adds a textured quad at the specified position with the specified half dimensions
+/*
+	\fn void AddQuadTextured(const glm::vec3& center, const glm::vec2& extents, const glm::mat4* transform = nullptr)
+	\brief Adds a textured quad to the mesh.
+	\brief Calculates the vertices by adding the extents to the center.
+	\param center The center of the quad.
+	\param extents The extents of the quad.
+	\param transform The optional transform of the quad.
+*/
 void Mesh::AddQuadTextured(const glm::vec3 & center, const glm::vec2 & extents, const glm::mat4 * transform)
 {
 	// collection of the corners of the quad
@@ -252,7 +291,15 @@ void Mesh::AddQuadTextured(const glm::vec3 & center, const glm::vec2 & extents, 
 	m_triVertices[m_triVertexCount - 1].texCoord = { 1, 0 };
 }
 
-// adds a coloured box at the specified position with the specified half dimensions
+/*
+	\fn void AddBox(const glm::vec3& center, const glm::vec3& extents, const glm::vec4& colour, const glm::mat4* transform = nullptr)
+	\brief Adds a box to the mesh.
+	\brief Calculates the vertices by adding the extents to the center.
+	\param center The center of the box.
+	\param extents The extents of the box.
+	\param colour The colour of the box.
+	\param transform The optional transform of the box.
+*/
 void Mesh::AddBox(const glm::vec3& center, const glm::vec3& extents,
 	const glm::vec4& colour, const glm::mat4* transform /* = nullptr */)
 {
@@ -276,6 +323,7 @@ void Mesh::AddBox(const glm::vec3& center, const glm::vec3& extents,
 		tempCenter = glm::vec3((*transform)[3]) + tempCenter;
 	}
 
+	// using a particular combinations of the 3 vectors to determine the vertices
 	verts[0] = tempCenter - vX - vY - vZ;
 	verts[1] = tempCenter - vX - vY + vZ;
 	verts[2] = tempCenter + vX - vY + vZ;
@@ -323,15 +371,28 @@ void Mesh::AddBox(const glm::vec3& center, const glm::vec3& extents,
 	AddTri(verts[6], verts[2], verts[7], colour);
 }
 
+/*
+	\fn void AddCylinder(const glm::vec3& center, const float radius, const float halfLength, const unsigned int segments, const glm::vec4& colour, const glm::mat4* transform = nullptr)
+	\brief Adds a cylinder to the mesh.
+	\param center The center of the cylinder.
+	\param radius The radius of the cylinder.
+	\param halfLength The half the height of the cylinder.
+	\param segments The amount of segments on the circle component of the cylinder.
+	\param colour The colour of the cylinder.
+	\param transform The optional transform of the cylinder.
+*/
 void Mesh::AddCylinder(const glm::vec3 & center, const float radius, const float halfLength,
 	const unsigned int segments, const glm::vec4 & colour, const glm::mat4 * transform /* = nullptr */)
 {
+	// the center of the cylinder
 	glm::vec3 tempCenter = transform != nullptr ? glm::vec3((*transform)[3]) + center : center;
 
 	glm::vec4 white(1, 1, 1, 1);
 
+	// segments a circle by the amount of segments
 	float segmentSize = (2.0f * glm::pi<float>()) / segments;
 
+	// used aie gizmos to figure out how to get the vetices
 	for (unsigned int i = 0; i < segments; ++i)
 	{
 		glm::vec3 v0top(0.0f, halfLength, 0.0f);
@@ -341,6 +402,7 @@ void Mesh::AddCylinder(const glm::vec3 & center, const float radius, const float
 		glm::vec3 v1bottom(sinf(i * segmentSize) * radius, -halfLength, cosf(i * segmentSize) * radius);
 		glm::vec3 v2bottom(sinf((i + 1) * segmentSize) * radius, -halfLength, cosf((i + 1) * segmentSize) * radius);
 
+		// transforms all the properties based on the provided transform
 		if (transform != nullptr)
 		{
 			v0top = glm::vec3(*transform * glm::vec4(v0top, 0.0f));
@@ -364,16 +426,29 @@ void Mesh::AddCylinder(const glm::vec3 & center, const float radius, const float
 	}
 }
 
+/*
+	\fn void AddPyramid(const glm::vec3& center, const float halfHeight, const float halfWidth, const glm::vec4& colour, const glm::mat4* transform = nullptr)
+	\brief Adds a pyramid to the pyramid.
+	\param center The center of the pyramid.
+	\param halfWidth The half the width of the pyramid.
+	\param halfHeight The half the height of the pyramid.
+	\param colour The colour of the pyramid.
+	\param transform The optional transform of the pyramid.
+*/
 void Mesh::AddPyramid(const glm::vec3 & center, const float halfHeight, const float halfWidth,
 	const glm::vec4 & colour, const glm::mat4 * transform /* = nullptr */)
 {
+	// contains the 5 vertices of the pyramid mesh
 	glm::vec3 verts[5];
+	// the 3 axis of the pyramid using the given extents
 	glm::vec3 up(0.0f, halfHeight, 0.0f);
 	glm::vec3 right(halfWidth, 0.0f, 0.0f);
 	glm::vec3 forward(0.0f, 0.0f, halfWidth);
+	// the transformed center of the pyramid
 	glm::vec3 tempCenter = transform != nullptr ? glm::vec3((*transform)[3]) + center : center;
 	glm::vec4 white(1.0f, 1.0f, 1.0f, 1.0f);
 
+	// transforms all the properties based on the provided transform
 	if (transform != nullptr)
 	{
 		up = glm::vec3(*transform * glm::vec4(up, 0.0f));
@@ -381,12 +456,15 @@ void Mesh::AddPyramid(const glm::vec3 & center, const float halfHeight, const fl
 		forward = glm::vec3(*transform * glm::vec4(forward, 0.0f));
 	}
 
+	// using different combinations of right and forward vectors with a negative up vector to determine the base
 	verts[0] = tempCenter - right - up - forward;
 	verts[1] = tempCenter + right - up - forward;
 	verts[2] = tempCenter + right - up + forward;
 	verts[3] = tempCenter - right - up + forward;
+	// the peak of the pyramid
 	verts[4] = tempCenter + up;
 
+	// adds the tris in a particular order to ensure that it is not culled
 	AddTri(verts[0], verts[1], verts[2], colour);
 	AddTri(verts[2], verts[3], verts[0], colour);
 	AddTri(verts[1], verts[0], verts[4], colour);
@@ -394,6 +472,7 @@ void Mesh::AddPyramid(const glm::vec3 & center, const float halfHeight, const fl
 	AddTri(verts[3], verts[2], verts[4], colour);
 	AddTri(verts[0], verts[3], verts[4], colour);
 
+	// adds the lines in a particular order to ensure that it is not culled
 	AddLine(verts[0], verts[1], white);
 	AddLine(verts[1], verts[2], white);
 	AddLine(verts[2], verts[3], white);
@@ -404,6 +483,20 @@ void Mesh::AddPyramid(const glm::vec3 & center, const float halfHeight, const fl
 	AddLine(verts[3], verts[4], white);
 }
 
+/*
+	\fn void AddSphere(const glm::vec3& center, const float radius, int rows, const int columns, const glm::vec4& colour, const glm::mat4* transform = nullptr, const float longMin = 0.0f, const float longMax = 360.0f, const float latMin = -90.0f, const float latMax = 90.0f)
+	\brief Adds a sphere to the mesh.
+	\param center The center of the sphere.
+	\param radius The radius of the sphere.
+	\param rows The rows of the sphere.
+	\param columns The columns of the sphere.
+	\param colour The colour of the sphere.
+	\param transform The optional transform of the sphere.
+	\param longMin The optional minimum longitude of the sphere.
+	\param longMax The optional maximum longitude of the sphere.
+	\param latMin The optional minimum latitude of the sphere.
+	\param latMax The optional maximum latitude of the sphere.
+*/
 void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, const int columns, const glm::vec4 & colour, const glm::mat4 * transform /* = nullptr */,
 	const float longMin /* = 0.0f */, const float longMax /* = 360.0f */, const float latMin /* = -90.0f */, const float latMax /* = 90.0f */)
 {
@@ -413,8 +506,10 @@ void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, con
 	float invColumns = 1.0f / columns;
 	float invRows = 1.0f / rows;
 
+	// used to convert degrees into radians
 	float DEG2RAD = glm::pi<float>() / 180;
 
+	// transforms the center based on the provided transform
 	glm::vec3 tempCenter = transform != nullptr ? glm::vec3((*transform)[3]) + center : center;
 
 	// put latitude and longitude in radians
@@ -424,6 +519,7 @@ void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, con
 	// for each row of the mesh
 	glm::vec3* globe = new glm::vec3[rows * columns + columns];
 
+	// got method from aie gizmos
 	for (int row = 0; row <= rows; row++)
 	{
 		// navigation around the x axis in GL
@@ -439,6 +535,7 @@ void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, con
 			glm::vec3 point(-z * sinf(theta), y, -z * cosf(theta));
 			glm::vec3 normal(inverseRadius * point.x, inverseRadius * point.y, inverseRadius * point.z);
 
+			// transforms all the properties based on the provided transform
 			if (transform != nullptr)
 			{
 				point = glm::vec3((*transform * glm::vec4(point, 0)));
@@ -452,6 +549,7 @@ void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, con
 
 	glm::vec4 white(1.0f, 1.0f, 1.0f, 1.0f);
 
+	// adds all the lines and tris
 	for (int face = 0; face < (rows * columns); face++)
 	{
 		int nextFace = face + 1;
@@ -477,25 +575,35 @@ void Mesh::AddSphere(const glm::vec3 & center, const float radius, int rows, con
 	delete[] globe;
 }
 
+/*
+	\fn void Draw()
+	\brief Draws the mesh.
+*/
 void Mesh::Draw()
 {
+	// checks if there are any tris to draw
 	if ((m_triIndexCount * 3) > 0)
 	{
+		// binds the vertex array
 		glBindVertexArray(m_triVAO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_triIBO);
+		// sets the index data
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, m_triIndexCount * sizeof(unsigned int), m_triIndices);		
 		glBindBuffer(GL_ARRAY_BUFFER, m_triVBO);
+		// sets the vertex data
 		glBufferSubData(GL_ARRAY_BUFFER, 0, m_triVertexCount * sizeof(Vertex), m_triVertices);
+		// draws the vertices
 		glDrawElements(GL_TRIANGLES, m_triIndexCount, GL_UNSIGNED_INT, 0);
 	}
+	// checks if there are any lines to draw
 	if ((m_lineVertexCount * 2) > 0)
 	{
+		// binds the vertex array
 		glBindVertexArray(m_lineVAO);
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_lineIBO);
-		//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, m_lineIndexCount * sizeof(unsigned int), m_lineIndices);		
 		glBindBuffer(GL_ARRAY_BUFFER, m_lineVBO);
+		// sets the vertex data
 		glBufferSubData(GL_ARRAY_BUFFER, 0, m_lineVertexCount * sizeof(Vertex), m_lineVertices);
-		//glDrawElements(GL_LINES, m_lineIndexCount, GL_UNSIGNED_INT, 0);
+		// draws the vertices
 		glDrawArrays(GL_LINES, 0, m_lineVertexCount);
 	}
 }

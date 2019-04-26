@@ -16,7 +16,7 @@
 
 /*
 	\class App3D
-	\brief Derivees from the aie Application class but implements a custom start up function.
+	\brief Derives from the aie Application class but implements a custom start up function.
 */
 class App3D : public aie::Application
 {
@@ -66,7 +66,7 @@ public:
 		\param shader The shader that the uniform is being bound for.
 		\param propertyName The name of the shader light property that will be bound.
 		\param lightIndex The index of the light in the array of lights.
-		\param value The value that the bound uniform is being set to.
+		\tparam value The value that the bound uniform is being set to.
 	*/
 	template <typename T>
 	void SetLightUniform(aie::ShaderProgram* shader, const char* propertyName, size_t lightIndex, const T& value)
@@ -85,16 +85,16 @@ protected:
 	/*
 		\struct Light
 		\brief An object that emits light.
-		\var glm::vec3 position
-		\brief The position of the light.
+		\var glm::vec4 position
+		The position of the light.
 		\var glm::vec3 Ia
-		\brief The ambient colour of the light.
+		The ambient colour of the light.
 		\var glm::vec3 Id
-		\brief The diffuse colour of the light.
+		The diffuse colour of the light.
 		\var glm::vec3 Is
-		\brief The specular colour of the light.
+		The specular colour of the light.
 		\var float attenuation
-		\brief The reduction of the intensity of the light over distance.
+		The reduction of the intensity of the light over distance.
 	*/
 	struct Light
 	{
@@ -107,32 +107,25 @@ protected:
 
 	/*
 		\var Camera* m_camera
-		\brief The camera in the scene.
-
+		The camera in the scene.
 		\var aie::ShaderProgram m_phongShader
-		\brief The shader used to render the soul spear.
+		The shader used to render the soul spear.
 		\var aie::ShaderProgram m_simpleShader
-		\brief The shader used to render the light objects.
-
+		The shader used to render the light objects.
 		\var aie::OBJMesh m_spearMesh
-		\brief The mesh of the soul spear.
+		The mesh of the soul spear.
 		\var glm::mat4 m_spearTransform
-		\brief The transform of the soul spear.
+		The transform of the soul spear.
 		\var Mesh m_mesh
-		\brief The mesh of the light objects.
-
+		The mesh of the light objects.
 		\var std::vector<Light> m_lights
-		\brief A collection of the lights in the application.
+		A collection of the lights in the application.
 	*/
-
 	Camera* m_camera;
-
 	aie::ShaderProgram m_phongShader;
 	aie::ShaderProgram m_simpleShader;
-
 	aie::OBJMesh m_spearMesh;
 	glm::mat4 m_spearTransform;
 	Mesh* m_mesh;
-
 	std::vector<Light> m_lights;
 };

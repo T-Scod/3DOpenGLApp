@@ -86,7 +86,7 @@ bool App3D::startup()
 	directionalLight.Id = glm::vec3(1.0f, 1.0f, 0.0f);
 	directionalLight.Is = glm::vec3(1.0f, 1.0f, 0.0f);
 	directionalLight.attenuation = 1.0f;
-
+	// adds the lights to the collection of lights
 	m_lights.push_back(pointLight);
 	m_lights.push_back(directionalLight);
 
@@ -94,7 +94,7 @@ bool App3D::startup()
 }
 /*
 	\fn void shutdown()
-	\brief Deallocates all pointers.
+	\brief Deletes pointers.
 */
 void App3D::shutdown()
 {
@@ -106,13 +106,15 @@ void App3D::shutdown()
 
 /*
 	\fn void update(float deltaTime)
-	\brief Updates the camera each frame.
+	\brief Updates the camera each frame and makes an orbiting "sun" by moving the directional light around.
 	\param deltaTime The time between each frame.
 */
 void App3D::update(float deltaTime)
 {
+	// checks if the escape button was pressed
 	if (glfwWindowShouldClose(m_window) == true || glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
+		// ends the game loop
 		m_gameOver = true;
 	}
 
@@ -120,40 +122,47 @@ void App3D::update(float deltaTime)
 
 	// directional light orbits the center of the area
 	float time = getTime();
+	// for directional lights the position property is proportional to the direction of the light
 	m_lights[1].position = glm::vec4(glm::normalize(glm::vec3(glm::cos(time * 2.0f), glm::sin(time * 2.0f), 0.0f)), 0);
 }
 /*
 	/fn void draw()
-	/brief Draws all objects.
+	/brief Draws all objects using the aie shader and gizmo class draw functions.
 */
 void App3D::draw()
 {
+	// adds 3 coloured lines to the scene to represent the axis of the world space
 	aie::Gizmos::addTransform(glm::mat4(1.0f));
 
+	// predefined colours
 	glm::vec4 white(1.0f);
 	glm::vec4 black(0.0f, 0.0f, 0.0f, 1.0f);
 
+	// adds a grid with black lines and a white line in the middle rows and columns
 	for (int i = 0; i < 21; i++)
 	{
+		// x axis lines
 		aie::Gizmos::addLine(glm::vec3(-10.0f + i, 0.0f, 10.0f),
 			glm::vec3(-10.0f + i, 0.0f, -10.0f),
 			(i == 10) ? white : black);
-
+		// z axis lines
 		aie::Gizmos::addLine(glm::vec3(10.0f, 0.0f, -10.0f + i),
 			glm::vec3(-10.0f, 0.0f, -10.0f + i),
 			(i == 10) ? white : black);
 	}
 
-	glm::mat4 pvm = m_camera->GetProjectionView();
+	// gets the projection view matrix from the camera
+	glm::mat4 pv = m_camera->GetProjectionView();
+	// sets the phong shader as the current shader
 	m_phongShader.bind();
-	// binds all the uniforms
-	m_phongShader.bindUniform("ProjectionViewModel", pvm * m_spearTransform);
+	// sets the value of the bound shader uniforms
+	m_phongShader.bindUniform("ProjectionViewModel", pv * m_spearTransform);
 	m_phongShader.bindUniform("ModelMatrix", m_camera->GetModel());
 	m_phongShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(m_spearTransform)));
 	m_phongShader.bindUniform("numLights", (int)m_lights.size());
 	m_phongShader.bindUniform("cameraPosition", glm::vec3(m_camera->GetModel()[3]));
 
-	// binds the property for each light
+	// binds the property for each light in the collection
 	for (size_t i = 0; i < m_lights.size(); i++)
 	{
 		SetLightUniform(&m_phongShader, "position", i, m_lights[i].position);
@@ -162,14 +171,15 @@ void App3D::draw()
 		SetLightUniform(&m_phongShader, "Is", i, m_lights[i].Is);
 		SetLightUniform(&m_phongShader, "attenuation", i, m_lights[i].attenuation);
 	}
+	// draws the model
 	m_spearMesh.draw();
 
-	// draws the point light
+	// draws the point light in the same way that the spear is drawn
 	m_simpleShader.bind();
-	m_simpleShader.bindUniform("ProjectionViewModel", pvm);
+	m_simpleShader.bindUniform("ProjectionViewModel", pv);
 	m_mesh->Draw();
 
-	// draws the directional light as a sphere
+	// draws the directional light as a sphere using the gizmos class
 	aie::Gizmos::addSphere(m_lights[1].position, 1.0f, 16.0f, 16.0f, { m_lights[1].Id, 1.0f });
 
 	aie::Gizmos::draw(m_camera->GetProjectionView());
@@ -177,25 +187,26 @@ void App3D::draw()
 
 /*
 	\fn RunApp()
-	\brief Sets up the window and starts the game loop.
+	\brief Initialises the application window and sets up a game loop.
 */
 void App3D::RunApp()
 {
-	// initialises
+	// initialises the GLFW library
 	if (glfwInit() == false)
 	{
 		return;
 	}
 
-	// creates the window
+	// creates the application window
 	m_window = glfwCreateWindow(1280, 720, "Computer Graphics", nullptr, nullptr);
-
+	// checks if the window was created
 	if (m_window == nullptr)
 	{
 		glfwTerminate();
 		return;
 	}
 
+	// makes the window a current on the calling thread
 	glfwMakeContextCurrent(m_window);
 
 	// remaps all of OpenGl's function calls to the correct versions
@@ -206,22 +217,26 @@ void App3D::RunApp()
 		return;
 	}
 
-	// prints the current version
+	// prints the openGL current version
 	auto major = ogl_GetMajorVersion();
 	auto minor = ogl_GetMinorVersion();
 	printf("GL: %i.%i\n", major, minor);
 
+	// initialises the variables in the application and properly shuts down if an error occured
 	if (!startup())
 	{
 		glfwDestroyWindow(m_window);
 		glfwTerminate();
 	}
 
-	// sets the background colour
+	// sets the background colour to grey
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
+	// enables depth calculations
 	glEnable(GL_DEPTH_TEST);
+	// enables particular sides of a tri to be culled
 	glEnable(GL_CULL_FACE);
 
+	// creates a gizmo instance
 	aie::Gizmos::create(32768, 32768, 256, 256);
 
 	// variables for timing
@@ -231,6 +246,7 @@ void App3D::RunApp()
 	unsigned int frames = 0;
 	double fpsInterval = 0;
 
+	// game loop that continues until the game is over
 	while (!m_gameOver)
 	{
 		// GL_COLOR_BUFFER_BIT informs OpenGL tp wipe the back-buffer colours clean
@@ -240,19 +256,24 @@ void App3D::RunApp()
 		// clears all previously drawn gizmos
 		aie::Gizmos::clear();
 
-		// update delta time
+		// update delta time by finding the time between frames
 		currTime = glfwGetTime();
 		deltaTime = currTime - prevTime;
 		prevTime = currTime;
 
+		// passes delta time into the update
 		update(float(deltaTime));
+		// draws everything in the application
 		draw();
 
+		// processes the events in the application
 		glfwPollEvents();
 		glfwSwapBuffers(m_window);
 	}
 
+	// shuts down the program when the game is over
 	shutdown();
+	// destroys all gizmos and the window
 	aie::Gizmos::destroy();
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
